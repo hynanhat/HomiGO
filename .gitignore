@@ -5,9 +5,11 @@ target/
 .gradle/
 build/
 .idea/
+.vscode/
 *.iml
 *.log
 .env*
+!.env.example
 
 # Node / React
 node_modules/
@@ -16,6 +18,8 @@ build/
 coverage/
 *.log
 .env*
+!.env.example
 .env.local
 .DS_Store
 Thumbs.db
+uploads/

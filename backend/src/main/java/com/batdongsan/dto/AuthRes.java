@@ -1,18 +1,25 @@
 package com.batdongsan.dto;
 
 public class AuthRes {
-    private String token;
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType = "Bearer";
     private UserDto user;
 
     public AuthRes() {}
 
-    public AuthRes(String token, UserDto user) {
-        this.token = token;
+    public AuthRes(String accessToken, String refreshToken, UserDto user) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
         this.user = user;
     }
 
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
+    public String getAccessToken() { return accessToken; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    public String getTokenType() { return tokenType; }
+    public void setTokenType(String tokenType) { this.tokenType = tokenType; }
     public UserDto getUser() { return user; }
     public void setUser(UserDto user) { this.user = user; }
 

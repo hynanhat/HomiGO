@@ -1,48 +1,65 @@
-# Quickstart Validation Guide: Core Features
-
-This guide details the scenarios to run to validate that the core feature flow (End-to-End) works correctly on your local environment.
+# Quickstart Validation: HomiGO Backend Core
 
 ## Prerequisites
 
-1. Ensure the backend Spring Boot server is running on `http://localhost:8080`.
-2. Ensure the frontend React app is running on `http://localhost:5173`.
-3. Ensure MySQL is running and the schema is migrated.
+- Java 17+
+- Docker cho luồng MySQL end-to-end; unit/smoke tests không cần Docker
+- `JWT_SECRET` tối thiểu 32 bytes khi chạy application
 
-## End-to-End Core Flow
+## Fast verification
 
-### 1. Account Creation (Guest -> User)
+```powershell
+cd backend
+.\mvnw.cmd test
+```
 
-- Navigate to `http://localhost:5173/register`.
-- Fill in Name, Email, Password, and Phone.
-- Submit the form.
-- **Expected Outcome**: Account created successfully, redirected to the Login page.
+Expected: context test và unit tests đều pass bằng test profile.
 
-### 2. Role Upgrade (User -> Seller)
+## Full verification
 
-- Login with the newly created account.
-- Navigate to the User Profile page.
-- Click the "Upgrade to Seller" button.
-- **Expected Outcome**: The user's role is immediately updated to `SELLER`, and they gain access to the "Post Listing" button.
+1. Khởi động MySQL/backend:
 
-### 3. Posting a Listing (Seller)
+```powershell
+docker compose up --build -d
+```
 
-- Click "Post Listing".
-- Fill in the required details (Category, District, Title, Description, Price, Area) and upload 2 images.
-- Submit the form.
-- **Expected Outcome**: Listing is created and visible in the "My Listings" dashboard with the status `PENDING`.
+2. Kiểm tra application khởi động từ database rỗng và Flyway áp dụng toàn bộ migration.
+3. Mở OpenAPI UI và xác nhận các endpoint khớp [contract](./contracts/api.md).
+4. Chạy `mvnw.cmd verify`; integration tests dùng MySQL Testcontainers.
 
-### 4. Admin Moderation (Admin)
+## Required end-to-end scenarios
 
-- Log out of the Seller account.
-- Log in with a pre-seeded Admin account.
-- Navigate to the Admin Dashboard -> Pending Listings.
-- Find the newly created listing and click "Approve".
-- **Expected Outcome**: The listing status changes to `ACTIVE`.
+### Scenario A — Publication flow
 
-### 5. Listing Discovery (Guest/User)
+1. Đăng ký USER và đăng nhập.
+2. Nâng tài khoản thành SELLER.
+3. Tạo DRAFT listing, upload hai ảnh hợp lệ và submit.
+4. Xác nhận public search chưa thấy PENDING listing.
+5. Admin duyệt.
+6. Xác nhận public search/detail thấy listing và `expiresAt` bằng 30 ngày sau `publishedAt`.
 
-- Navigate to the Home page (`http://localhost:5173/`).
-- Use the search bar to filter by the District and Category of the newly created listing.
-- **Expected Outcome**: The listing appears in the search results.
-- Click on the listing.
-- **Expected Outcome**: The detail page loads with all information, images, and the seller's contact info visible.
+### Scenario B — Re-approval and ownership
+
+1. Seller sửa ACTIVE listing; trạng thái phải thành PENDING.
+2. Seller khác sửa/xóa listing phải nhận 403.
+3. Admin reject với reason; seller xem được reason và có thể sửa rồi submit lại.
+
+### Scenario C — Search correctness
+
+Seed tối thiểu 30 listing ở nhiều khu vực/giá/diện tích. Kiểm tra filter đơn, filter kết hợp, sort, pagination và bounding box. Kết quả không được chứa listing khác điều kiện hoặc không ACTIVE.
+
+### Scenario D — Security
+
+Kiểm tra token sai/hết hạn, refresh token đã revoke, BANNED user, USER gọi seller API, SELLER gọi admin API và endpoint saved-listings không xác thực.
+
+### Scenario E — Files and failures
+
+Kiểm tra file rỗng, quá 5 MB, MIME không hợp lệ, ảnh thứ 11, filename traversal, duplicate favorite, invalid range và optimistic locking conflict. Response không được lộ stack trace hoặc SQL.
+
+## Completion evidence
+
+- Báo cáo `mvn verify`.
+- Migration history và ERD theo [data model](./data-model.md).
+- OpenAPI JSON/YAML.
+- Seed/demo script và ảnh chụp E2E publication flow.
+- Bảng traceability từ FR/SC trong spec tới automated test.

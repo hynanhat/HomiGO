@@ -1,16 +1,21 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:8
     container_name: homigo_db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: batdongsan
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${DB_NAME:-batdongsan}
+      MYSQL_USER: ${DB_USER:-homigo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   backend:
     build: ./backend
@@ -18,22 +23,17 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_NAME=batdongsan
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - JWT_SECRET=VerySecretKeyForJwtAuthenticationInHomiGO
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-batdongsan}
+      DB_USER: ${DB_USER:-homigo}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-900000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
     depends_on:
-      - db
-
-  frontend:
-    build: ./frontend
-    container_name: homigo_frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:

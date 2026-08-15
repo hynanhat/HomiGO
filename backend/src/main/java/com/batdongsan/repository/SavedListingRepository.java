@@ -1,10 +1,15 @@
 package com.batdongsan.repository;
 
 import com.batdongsan.entity.SavedListing;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface SavedListingRepository extends JpaRepository<SavedListing, Long> {
-    List<SavedListing> findByUserId(Long userId);
+    @EntityGraph(attributePaths = {"listing", "listing.user", "listing.category", "listing.district",
+            "listing.district.province", "listing.ward", "listing.project"})
+    Page<SavedListing> findByUserId(Long userId, Pageable pageable);
+    boolean existsByUserIdAndListingId(Long userId, Long listingId);
     void deleteByUserIdAndListingId(Long userId, Long listingId);
 }

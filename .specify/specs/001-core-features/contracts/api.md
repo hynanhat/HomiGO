@@ -1,121 +1,89 @@
-# API Contracts: Core Features
+# REST API Contract: HomiGO Backend Core
 
-**Base Path**: `/api/v1`
+Base path: `/api/v1`. Mọi response dùng `ApiResponse`; danh sách dùng Spring-style page metadata. Validation trả `400`, chưa đăng nhập `401`, thiếu quyền `403`, không tìm thấy `404`, xung đột version/unique `409`.
 
-**Global Response Format**:
-```json
-{
-  "success": true | false,
-  "data": { ... } | [ ... ] | null,
-  "message": "String message",
-  "errorCode": "OPTIONAL_ERROR_CODE"
-}
-```
+## Authentication and profile
 
-## Authentication
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| POST | `/auth/register` | Public | Đăng ký USER |
+| POST | `/auth/login` | Public | Cấp access + refresh token |
+| POST | `/auth/refresh` | Public/token | Đổi refresh token |
+| POST | `/auth/logout` | Authenticated | Thu hồi refresh token |
+| PUT | `/auth/password` | Authenticated | Đổi mật khẩu và thu hồi phiên cũ |
+| GET | `/users/me` | Authenticated | Hồ sơ hiện tại |
+| PUT | `/users/me` | Authenticated | Cập nhật hồ sơ |
+| POST | `/users/me/upgrade-seller` | USER | Nâng thành SELLER |
 
-### `POST /auth/register`
-- **Role**: PUBLIC
-- **Body**: `{ name, email, password, phone }`
-- **Response**: `{ id, email, role }`
+## Public discovery
 
-### `POST /auth/login`
-- **Role**: PUBLIC
-- **Body**: `{ email, password }`
-- **Response**: `{ token, user: { id, name, email, role } }`
+`GET /listings` hỗ trợ `keyword`, `transactionType`, `provinceId`, `districtId`, `wardId`, `categoryId`, `projectId`, `minPrice`, `maxPrice`, `minArea`, `maxArea`, `bedrooms`, `minLat`, `maxLat`, `minLng`, `maxLng`, `sort`, `page`, `size`.
 
-### `PUT /auth/password`
-- **Role**: USER, SELLER, ADMIN
-- **Body**: `{ currentPassword, newPassword }`
-- **Response**: Success message.
+Sort whitelist: `newest`, `priceAsc`, `priceDesc`, `areaAsc`, `areaDesc`. Chỉ ACTIVE listing được trả về.
 
-## Listings (Public & Management)
+| Method | Path | Role |
+|---|---|---|
+| GET | `/listings` | Public |
+| GET | `/listings/{publicCode}` | Public |
+| GET | `/projects` | Public |
+| GET | `/projects/{slug}` | Public |
+| GET | `/locations/provinces` | Public |
+| GET | `/locations/provinces/{id}/districts` | Public |
+| GET | `/locations/districts/{id}/wards` | Public |
 
-### `GET /listings`
-- **Role**: PUBLIC
-- **Query Params**: `type` (BUY/RENT), `province`, `district`, `category`, `minPrice`, `maxPrice`, `minArea`, `maxArea`, `page`, `size`
-- **Response**: Paginated list of listings (status = ACTIVE only).
+`GET /projects` hỗ trợ `keyword`, `districtId`, `status`, `page`, `size`.
+Trạng thái hợp lệ: `PLANNING`, `IN_PROGRESS`, `COMPLETED`, `ON_HOLD`.
+`GET /projects/{slug}` nhận `page`, `size` để phân trang các tin ACTIVE, chưa hết hạn thuộc dự án.
+Các danh sách location cũng nhận `page`, `size` theo chuẩn phân trang chung.
 
-### `GET /listings/{id}`
-- **Role**: PUBLIC
-- **Response**: Full listing details, including images and seller contact info.
+## Seller listing management
 
-### `POST /listings`
-- **Role**: SELLER, ADMIN
-- **Body**: `{ categoryId, districtId, projectId(optional), title, description, price, area }`
-- **Response**: Created listing ID. (Status defaults to PENDING).
+| Method | Path | Role |
+|---|---|---|
+| POST | `/seller/listings` | SELLER/ADMIN |
+| GET | `/seller/listings` | SELLER/ADMIN; own listings |
+| GET | `/seller/listings/{id}` | Owner/ADMIN |
+| PUT | `/seller/listings/{id}` | Owner/ADMIN; requires version |
+| DELETE | `/seller/listings/{id}` | Owner/ADMIN |
+| POST | `/seller/listings/{id}/submit` | Owner |
+| POST | `/seller/listings/{id}/deactivate` | Owner |
+| POST | `/seller/listings/{id}/images` | Owner; multipart, max 10 total |
+| DELETE | `/seller/listings/{id}/images/{imageId}` | Owner |
 
-### `PUT /listings/{id}`
-- **Role**: SELLER (Owner), ADMIN
-- **Body**: `{ categoryId, districtId, projectId(optional), title, description, price, area }`
-- **Response**: Updated listing details.
+Create defaults to DRAFT. Submit transitions DRAFT/REJECTED/INACTIVE → PENDING. Editing ACTIVE moves it to PENDING.
 
-### `DELETE /listings/{id}`
-- **Role**: SELLER (Owner), ADMIN
-- **Response**: Success message.
+## Favorites
 
-### `POST /listings/{id}/images`
-- **Role**: SELLER (Owner), ADMIN
-- **Body**: `multipart/form-data` containing files.
-- **Response**: List of uploaded image URLs.
+| Method | Path | Role |
+|---|---|---|
+| GET | `/saved-listings` | Authenticated; paginated |
+| POST | `/saved-listings/{listingId}` | Authenticated |
+| DELETE | `/saved-listings/{listingId}` | Authenticated |
 
-## Projects
+## Admin
 
-### `GET /projects`
-- **Role**: PUBLIC
-- **Query Params**: `district`, `page`, `size`
-- **Response**: Paginated list of projects.
+| Method | Path | Role |
+|---|---|---|
+| GET | `/admin/listings?status=PENDING` | ADMIN; paginated |
+| POST | `/admin/listings/{id}/approve` | ADMIN |
+| POST | `/admin/listings/{id}/reject` | ADMIN; body `{reason}` |
+| GET | `/admin/users` | ADMIN; paginated |
+| POST | `/admin/users/{id}/ban` | ADMIN; body `{reason}` |
+| POST | `/admin/users/{id}/unban` | ADMIN |
+| GET/POST | `/admin/categories` | ADMIN; GET paginated |
+| PUT/DELETE | `/admin/categories/{id}` | ADMIN |
+| GET/POST | `/admin/projects` | ADMIN; GET paginated/filterable |
+| PUT/DELETE | `/admin/projects/{id}` | ADMIN |
+| GET/POST | `/admin/locations/provinces` | ADMIN; GET paginated |
+| PUT/DELETE | `/admin/locations/provinces/{id}` | ADMIN |
+| GET/POST | `/admin/locations/districts` | ADMIN; GET paginated |
+| PUT/DELETE | `/admin/locations/districts/{id}` | ADMIN |
+| GET/POST | `/admin/locations/wards` | ADMIN; GET paginated |
+| PUT/DELETE | `/admin/locations/wards/{id}` | ADMIN |
 
-### `GET /projects/{id}`
-- **Role**: PUBLIC
-- **Response**: Project details, including associated active listings.
+## Security matrix
 
-## Saved Listings (Favorites)
-
-### `POST /saved-listings/{listingId}`
-- **Role**: USER, SELLER, ADMIN
-- **Response**: Success message.
-
-### `DELETE /saved-listings/{listingId}`
-- **Role**: USER, SELLER, ADMIN
-- **Response**: Success message.
-
-## Admin Moderation
-
-### `GET /admin/listings`
-- **Role**: ADMIN
-- **Query Params**: `status` (e.g., PENDING), `page`, `size`
-- **Response**: Paginated list of listings matching the status.
-
-### `PATCH /admin/listings/{id}/status`
-- **Role**: ADMIN
-- **Body**: `{ status: "ACTIVE" | "REJECTED" }`
-- **Response**: Success message.
-
-### `PATCH /admin/users/{id}/status`
-- **Role**: ADMIN
-- **Body**: `{ status: "BANNED" | "ACTIVE" }`
-- **Response**: Success message.
-
-### `POST /admin/categories`
-- **Role**: ADMIN
-- **Body**: `{ name, slug, transactionType }`
-- **Response**: Created Category object.
-
-### `PUT /admin/categories/{id}`
-- **Role**: ADMIN
-- **Body**: `{ name, slug, transactionType }`
-- **Response**: Updated Category object.
-
-### `DELETE /admin/categories/{id}`
-- **Role**: ADMIN
-- **Response**: Success message.
-
-### `POST /admin/locations`
-- **Role**: ADMIN
-- **Body**: `{ name, type, parentId (optional) }`
-- **Response**: Created Location object (Province or District).
-
-### `DELETE /admin/locations/{id}`
-- **Role**: ADMIN
-- **Response**: Success message.
+- Public: chỉ đọc listing ACTIVE, project và location.
+- USER: public + favorite/profile/upgrade seller.
+- SELLER: USER + quản lý listing sở hữu.
+- ADMIN: moderation và master data; không dùng seller ownership endpoint để âm thầm sửa nội dung.

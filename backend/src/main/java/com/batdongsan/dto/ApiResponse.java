@@ -16,7 +16,7 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, data, "Success", null);
+        return new ApiResponse<>(true, data, "Thành công.", null);
     }
 
     public static <T> ApiResponse<T> error(String message, String errorCode) {

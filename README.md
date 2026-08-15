@@ -1,50 +1,63 @@
-# HomiGO - Bất Động Sản Platform
+# HomiGO Backend
 
-Nền tảng website bất động sản (rút gọn theo mô hình batdongsan.com.vn) cho phép người dùng tìm kiếm, đăng tin mua bán/cho thuê nhà đất, và xem thông tin các dự án bất động sản.
+Backend cho nền tảng bất động sản HomiGO, hỗ trợ xác thực người dùng, đăng và duyệt tin,
+tìm kiếm bất động sản, lưu tin yêu thích, quản lý dự án và danh mục.
 
-## Công nghệ sử dụng
-- **Backend:** Java Spring Boot 3.x (Spring Web, Spring Data JPA, Spring Security), MySQL 8, JWT
-- **Frontend:** React (Vite), Tailwind CSS
+## Công nghệ
 
-## Cài đặt và chạy dự án (Local)
+- Java 17
+- Spring Boot 4.1
+- Spring Web MVC, Spring Security và JWT
+- Spring Data JPA
+- MySQL 8
+- Maven Wrapper
+- H2 cho môi trường test
 
-### 1. Database
-Yêu cầu MySQL 8.
-Tạo database tên `batdongsan`.
+## Chạy local
+
+Yêu cầu Java 17+ và MySQL 8. Tạo database:
+
 ```sql
 CREATE DATABASE batdongsan;
 ```
 
-### 2. Chạy Backend
-Chuyển tới thư mục `backend/` và cấu hình các biến môi trường trong file `.env` hoặc trực tiếp trong IDE:
-```
+Thiết lập biến môi trường:
+
+```text
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=batdongsan
-DB_USER=root
-DB_PASSWORD=root
-JWT_SECRET=your_super_secret_jwt_key_that_is_at_least_32_bytes_long
-```
-Chạy ứng dụng:
-```bash
-mvn spring-boot:run
+DB_USER=homigo
+DB_PASSWORD=your_local_database_password
+JWT_SECRET=replace_with_a_secret_of_at_least_32_bytes
 ```
 
-### 3. Chạy Frontend
-Chuyển tới thư mục `frontend/`:
-```bash
-npm install
-npm run dev
+Trên Windows:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
 ```
 
-## Triển khai bằng Docker
+API chạy tại `http://localhost:8080/api/v1`.
 
-Dự án bao gồm `docker-compose.yml` để dễ dàng triển khai toàn bộ (Database, Backend, Frontend).
+## Chạy kiểm thử
 
-Tại thư mục gốc của dự án, chạy:
-```bash
-docker-compose up --build -d
+Test sử dụng H2 in-memory và không yêu cầu MySQL đang chạy:
+
+```powershell
+cd backend
+.\mvnw.cmd test
 ```
-Ứng dụng sẽ được chạy tại:
-- Frontend: http://localhost:80
-- Backend API: http://localhost:8080/api/v1
+
+## Chạy bằng Docker Compose
+
+```powershell
+Copy-Item .env.example .env
+# Cập nhật các giá trị change-me trong .env trước khi chạy.
+docker compose up --build -d
+```
+
+Compose khởi chạy MySQL và backend. Backend chỉ được khởi động sau khi MySQL sẵn sàng.
+
+> Repository hiện tập trung hoàn toàn vào backend và không chứa frontend.

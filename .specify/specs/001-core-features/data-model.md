@@ -1,80 +1,86 @@
-# Data Model: Core Features
+# Data Model: HomiGO Backend Core
 
-## Entities
+## User
 
-### User
-Represents a registered account in the system (Guests are unauthenticated and not stored).
-- `id` (Long, PK)
-- `name` (String, required)
-- `email` (String, required, unique)
-- `password_hash` (String, required)
-- `phone` (String)
-- `role` (Enum: `USER`, `SELLER`, `ADMIN`, default: `USER`)
-- `status` (Enum: `ACTIVE`, `BANNED`, default: `ACTIVE`)
-- `created_at` (Timestamp)
+`id`, `name`, `email` (unique), `password_hash`, `phone`, `avatar_url`, `role` (`USER|SELLER|ADMIN`), `status` (`ACTIVE|BANNED`), `created_at`, `updated_at`.
 
-### Category
-Represents the property type (e.g., Apartment, House, Land).
-- `id` (Long, PK)
-- `name` (String, required)
-- `slug` (String, required, unique)
-- `transaction_type` (Enum: `BUY`, `RENT`)
+- Email được chuẩn hóa lowercase trước khi lưu.
+- BANNED user không được xác thực và toàn bộ ACTIVE listing chuyển INACTIVE.
 
-### Province
-Represents a primary geographic location.
-- `id` (Long, PK)
-- `name` (String, required)
+## RefreshToken
 
-### District
-Represents a sub-location within a Province.
-- `id` (Long, PK)
-- `province_id` (Long, FK to Province)
-- `name` (String, required)
+`id`, `user_id`, `token_hash` (unique), `expires_at`, `revoked_at`, `created_at`.
 
-### Project
-Represents a real estate development project.
-- `id` (Long, PK)
-- `name` (String, required)
-- `investor` (String)
-- `district_id` (Long, FK to District)
-- `status` (String - e.g., "Under Construction", "Handed Over")
-- `price_range` (String - e.g., "2-4 Tỷ")
+- Chỉ lưu hash, không lưu raw token.
+- Token hết hạn/đã thu hồi không thể cấp access token.
 
-### Listing
-Represents a real estate property for sale or rent posted by a SELLER.
-- `id` (Long, PK)
-- `user_id` (Long, FK to User, required)
-- `category_id` (Long, FK to Category, required)
-- `district_id` (Long, FK to District, required)
-- `project_id` (Long, FK to Project, nullable)
-- `title` (String, required)
-- `description` (Text, required)
-- `price` (BigDecimal, required)
-- `area` (Double, required)
-- `status` (Enum: `PENDING`, `ACTIVE`, `REJECTED`, `EXPIRED`, default: `PENDING`)
-- `created_at` (Timestamp)
-- `expires_at` (Timestamp)
+## Province, District, Ward
 
-### ListingImage
-Represents images attached to a listing (max 10 per listing).
-- `id` (Long, PK)
-- `listing_id` (Long, FK to Listing, required)
-- `url` (String, required)
-- `sort_order` (Integer)
+- `Province(id, name, code)`
+- `District(id, province_id, name, code)`
+- `Ward(id, district_id, name, code)`
 
-### SavedListing
-Represents the many-to-many relationship for users favoriting listings.
-- `id` (Long, PK)
-- `user_id` (Long, FK to User, required)
-- `listing_id` (Long, FK to Listing, required)
-- `created_at` (Timestamp)
+Code là unique trong cấp tương ứng; khóa ngoại không nullable.
+
+## Category
+
+`id`, `name`, `slug` (unique), `transaction_type` (`BUY|RENT`), `active`.
+
+## Project
+
+`id`, `name`, `slug`, `investor`, `district_id`, `ward_id`, `address`, `latitude`, `longitude`, `status`, `description`, `price_from`, `price_to`, `created_at`, `updated_at`.
+
+## Listing
+
+`id`, `public_code`, `user_id`, `category_id`, `district_id`, `ward_id`, `project_id?`, `title`, `description`, `price`, `area`, `address`, `latitude`, `longitude`, `bedrooms?`, `bathrooms?`, `floors?`, `direction?`, `furnishing?`, `legal_status?`, `contact_name`, `contact_phone`, `status`, `rejection_reason?`, `approved_by?`, `approved_at?`, `published_at?`, `expires_at?`, `created_at`, `updated_at`, `version`.
+
+Validation:
+
+- `price > 0`, `area > 0`; text có giới hạn chiều dài.
+- Tọa độ hợp lệ nếu được cung cấp.
+- Seller chỉ sửa tin của mình; admin có workflow riêng.
+- Public query chỉ trả `ACTIVE` và chưa hết hạn.
+- `version` dùng optimistic locking để phát hiện cập nhật đồng thời.
+
+State transitions:
+
+```text
+DRAFT -> PENDING
+PENDING -> ACTIVE | REJECTED
+REJECTED -> DRAFT | PENDING
+ACTIVE -> PENDING (seller edits) | INACTIVE | EXPIRED
+INACTIVE -> PENDING
+```
+
+Khi chuyển ACTIVE: đặt `published_at=now`, `expires_at=now+30 days`. Từ chối bắt buộc có lý do.
+
+## ListingImage
+
+`id`, `listing_id`, `storage_key`, `url`, `content_type`, `size_bytes`, `sort_order`, `created_at`.
+
+- Unique `(listing_id, sort_order)`.
+- Tối đa 10 ảnh/tin; JPEG/PNG/WebP; mỗi ảnh tối đa 5 MB.
+
+## SavedListing
+
+`id`, `user_id`, `listing_id`, `created_at`; unique `(user_id, listing_id)`.
+
+## ListingStatusHistory
+
+`id`, `listing_id`, `from_status?`, `to_status`, `changed_by`, `reason?`, `created_at`.
+
+Mọi thay đổi trạng thái đều được ghi để audit và trình bày lịch sử duyệt.
 
 ## Relationships
 
-- **User (1) to Listing (N)**: A seller can post multiple listings.
-- **Category (1) to Listing (N)**: A category contains multiple listings.
-- **Province (1) to District (N)**: A province contains multiple districts.
-- **District (1) to Listing (N)**: A district contains multiple listings.
-- **Project (1) to Listing (N)** (Nullable): A project can have multiple listings associated with it.
-- **Listing (1) to ListingImage (N)**: A listing can have up to 10 images.
-- **User (N) to Listing (N)**: Users can favorite multiple listings, mapped via the `SavedListing` entity.
+- User 1—N Listing, RefreshToken, SavedListing, ListingStatusHistory(changed_by).
+- Province 1—N District; District 1—N Ward/Project/Listing.
+- Project 1—N Listing (optional phía Listing).
+- Listing 1—N ListingImage, SavedListing, ListingStatusHistory.
+- Category 1—N Listing.
+
+## Required Indexes
+
+- Listing: `(status, created_at)`, `(district_id, status)`, `(category_id, status)`, `price`, `area`, `expires_at`, `public_code` unique.
+- SavedListing: `(user_id, created_at)` và unique `(user_id, listing_id)`.
+- Project: `(district_id, status)` và `slug` unique.
