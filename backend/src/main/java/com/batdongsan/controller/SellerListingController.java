@@ -17,8 +17,8 @@ public class SellerListingController {
 
     @PostMapping public ResponseEntity<ApiResponse<ListingRes>> create(@Valid @RequestBody ListingReq req,Authentication auth){
         return ResponseEntity.ok(ApiResponse.success(listings.createListing(auth.getName(),req)));}
-    @GetMapping public ResponseEntity<ApiResponse<Page<ListingRes>>> mine(@Valid @ModelAttribute PageReq page,Authentication auth){
-        return ResponseEntity.ok(ApiResponse.success(listings.getMyListings(auth.getName(),PageRequest.of(page.getPage(),page.getSize(),Sort.by(Sort.Direction.DESC,"createdAt")))));}
+    @GetMapping public ResponseEntity<ApiResponse<PageResponse<ListingRes>>> mine(@Valid @ModelAttribute PageReq page,Authentication auth){
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(listings.getMyListings(auth.getName(),PageRequest.of(page.getPage(),page.getSize(),Sort.by(Sort.Direction.DESC,"createdAt"))))));}
     @GetMapping("/{id}") public ResponseEntity<ApiResponse<ListingRes>> one(@PathVariable Long id,Authentication auth){return ResponseEntity.ok(ApiResponse.success(listings.getOwnedListing(id,auth.getName())));}
     @PutMapping("/{id}") public ResponseEntity<ApiResponse<ListingRes>> update(@PathVariable Long id,@Valid @RequestBody ListingReq req,Authentication auth){return ResponseEntity.ok(ApiResponse.success(listings.updateListing(id,auth.getName(),req)));}
     @DeleteMapping("/{id}") public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,Authentication auth){listings.deleteListing(id,auth.getName());return ResponseEntity.ok(ApiResponse.success(null));}

@@ -2,12 +2,12 @@ package com.batdongsan.controller;
 
 import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.PageReq;
+import com.batdongsan.dto.PageResponse;
 import com.batdongsan.dto.location.DistrictRes;
 import com.batdongsan.dto.location.ProvinceRes;
 import com.batdongsan.dto.location.WardRes;
 import com.batdongsan.service.LocationService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -23,20 +23,22 @@ public class LocationController {
     }
 
     @GetMapping("/provinces")
-    public ResponseEntity<ApiResponse<Page<ProvinceRes>>> provinces(@Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(locationService.getProvinces(page(pageReq))));
+    public ResponseEntity<ApiResponse<PageResponse<ProvinceRes>>> provinces(@Valid @ModelAttribute PageReq pageReq) {
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(locationService.getProvinces(page(pageReq)))));
     }
 
     @GetMapping("/provinces/{provinceId}/districts")
-    public ResponseEntity<ApiResponse<Page<DistrictRes>>> districts(
+    public ResponseEntity<ApiResponse<PageResponse<DistrictRes>>> districts(
             @PathVariable Long provinceId, @Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(locationService.getDistricts(provinceId, page(pageReq))));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
+                locationService.getDistricts(provinceId, page(pageReq)))));
     }
 
     @GetMapping("/districts/{districtId}/wards")
-    public ResponseEntity<ApiResponse<Page<WardRes>>> wards(
+    public ResponseEntity<ApiResponse<PageResponse<WardRes>>> wards(
             @PathVariable Long districtId, @Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(locationService.getWards(districtId, page(pageReq))));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
+                locationService.getWards(districtId, page(pageReq)))));
     }
 
     private PageRequest page(PageReq pageReq) {

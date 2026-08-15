@@ -1,6 +1,8 @@
 # REST API Contract: HomiGO Backend Core
 
-Base path: `/api/v1`. Mọi response dùng `ApiResponse`; danh sách dùng Spring-style page metadata. Validation trả `400`, chưa đăng nhập `401`, thiếu quyền `403`, không tìm thấy `404`, xung đột version/unique `409`.
+Base path: `/api/v1`. Mọi response dùng `ApiResponse`; danh sách dùng page metadata ổn định của HomiGO. Validation trả `400`, chưa đăng nhập `401`, thiếu quyền `403`, không tìm thấy `404`, xung đột version/unique `409`.
+
+Page response có cấu trúc cố định: `content`, `number`, `size`, `totalElements`, `totalPages`, `numberOfElements`, `first`, `last`, `empty`. Các kiểu nội bộ của Spring như `pageable` và `sort` không được xuất hiện trong JSON contract.
 
 ## Authentication and profile
 

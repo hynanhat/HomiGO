@@ -4,9 +4,9 @@ import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.ListingFilter;
 import com.batdongsan.dto.ListingRes;
 import com.batdongsan.dto.PageReq;
+import com.batdongsan.dto.PageResponse;
 import com.batdongsan.service.ListingService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +21,11 @@ public class ListingController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ListingRes>>> searchListings(
+    public ResponseEntity<ApiResponse<PageResponse<ListingRes>>> searchListings(
             @Valid @ModelAttribute ListingFilter filter,
             @Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(listingService.searchListings(filter,
-                PageRequest.of(pageReq.getPage(), pageReq.getSize(), filter.toSort()))));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(listingService.searchListings(filter,
+                PageRequest.of(pageReq.getPage(), pageReq.getSize(), filter.toSort())))));
     }
 
     @GetMapping("/{publicCode}")

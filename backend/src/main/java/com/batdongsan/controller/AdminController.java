@@ -2,6 +2,7 @@ package com.batdongsan.controller;
 
 import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.PageReq;
+import com.batdongsan.dto.PageResponse;
 import com.batdongsan.dto.admin.*;
 import com.batdongsan.dto.location.*;
 import com.batdongsan.dto.project.ProjectFilter;
@@ -32,11 +33,11 @@ public class AdminController {
     }
 
     @GetMapping("/listings")
-    public ResponseEntity<ApiResponse<Page<AdminListingRes>>> listings(
+    public ResponseEntity<ApiResponse<PageResponse<AdminListingRes>>> listings(
             @RequestParam(defaultValue = "PENDING") ListingStatus status,
             @Valid @ModelAttribute PageReq page) {
         Pageable pageable = PageRequest.of(page.getPage(), page.getSize(), Sort.by("createdAt").ascending());
-        return ResponseEntity.ok(ApiResponse.success(adminService.getListings(status, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(adminService.getListings(status, pageable))));
     }
 
     @PostMapping("/listings/{id}/approve")
@@ -51,9 +52,9 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<Page<AdminUserRes>>> users(@Valid @ModelAttribute PageReq page) {
+    public ResponseEntity<ApiResponse<PageResponse<AdminUserRes>>> users(@Valid @ModelAttribute PageReq page) {
         Pageable pageable = PageRequest.of(page.getPage(), page.getSize(), Sort.by("createdAt").descending());
-        return ResponseEntity.ok(ApiResponse.success(adminService.getUsers(pageable)));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(adminService.getUsers(pageable))));
     }
 
     @PostMapping("/users/{id}/ban")
@@ -68,8 +69,8 @@ public class AdminController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<ApiResponse<Page<CategoryRes>>> categories(@Valid @ModelAttribute PageReq page) {
-        return ResponseEntity.ok(ApiResponse.success(adminService.getCategories(page(page))));
+    public ResponseEntity<ApiResponse<PageResponse<CategoryRes>>> categories(@Valid @ModelAttribute PageReq page) {
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(adminService.getCategories(page(page)))));
     }
 
     @PostMapping("/categories")
@@ -90,9 +91,9 @@ public class AdminController {
     }
 
     @GetMapping("/projects")
-    public ResponseEntity<ApiResponse<Page<ProjectSummaryRes>>> projects(
+    public ResponseEntity<ApiResponse<PageResponse<ProjectSummaryRes>>> projects(
             @Valid @ModelAttribute ProjectFilter filter, @Valid @ModelAttribute PageReq page) {
-        return ResponseEntity.ok(ApiResponse.success(projectService.getProjects(filter, page(page))));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(projectService.getProjects(filter, page(page)))));
     }
 
     @PostMapping("/projects")
@@ -113,8 +114,8 @@ public class AdminController {
     }
 
     @GetMapping("/locations/provinces")
-    public ResponseEntity<ApiResponse<Page<ProvinceRes>>> provinces(@Valid @ModelAttribute PageReq page) {
-        return ResponseEntity.ok(ApiResponse.success(locationService.getProvinces(page(page))));
+    public ResponseEntity<ApiResponse<PageResponse<ProvinceRes>>> provinces(@Valid @ModelAttribute PageReq page) {
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(locationService.getProvinces(page(page)))));
     }
 
     @PostMapping("/locations/provinces")
@@ -135,8 +136,8 @@ public class AdminController {
     }
 
     @GetMapping("/locations/districts")
-    public ResponseEntity<ApiResponse<Page<DistrictRes>>> districts(@Valid @ModelAttribute PageReq page) {
-        return ResponseEntity.ok(ApiResponse.success(locationService.getAllDistricts(page(page))));
+    public ResponseEntity<ApiResponse<PageResponse<DistrictRes>>> districts(@Valid @ModelAttribute PageReq page) {
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(locationService.getAllDistricts(page(page)))));
     }
 
     @PostMapping("/locations/districts")
@@ -157,8 +158,8 @@ public class AdminController {
     }
 
     @GetMapping("/locations/wards")
-    public ResponseEntity<ApiResponse<Page<WardRes>>> wards(@Valid @ModelAttribute PageReq page) {
-        return ResponseEntity.ok(ApiResponse.success(locationService.getAllWards(page(page))));
+    public ResponseEntity<ApiResponse<PageResponse<WardRes>>> wards(@Valid @ModelAttribute PageReq page) {
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(locationService.getAllWards(page(page)))));
     }
 
     @PostMapping("/locations/wards")

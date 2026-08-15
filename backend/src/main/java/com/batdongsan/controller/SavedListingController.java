@@ -3,9 +3,9 @@ package com.batdongsan.controller;
 import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.ListingRes;
 import com.batdongsan.dto.PageReq;
+import com.batdongsan.dto.PageResponse;
 import com.batdongsan.service.ListingService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +22,12 @@ public class SavedListingController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ListingRes>>> getSavedListings(
+    public ResponseEntity<ApiResponse<PageResponse<ListingRes>>> getSavedListings(
             @Valid @ModelAttribute PageReq pageReq, Authentication authentication) {
         PageRequest pageable = PageRequest.of(pageReq.getPage(), pageReq.getSize(),
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
-        return ResponseEntity.ok(ApiResponse.success(
-                listingService.getSavedListings(authentication.getName(), pageable)));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
+                listingService.getSavedListings(authentication.getName(), pageable))));
     }
 
     @PostMapping("/{listingId}")

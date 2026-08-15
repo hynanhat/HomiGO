@@ -2,12 +2,12 @@ package com.batdongsan.controller;
 
 import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.PageReq;
+import com.batdongsan.dto.PageResponse;
 import com.batdongsan.dto.project.ProjectDetailRes;
 import com.batdongsan.dto.project.ProjectFilter;
 import com.batdongsan.dto.project.ProjectSummaryRes;
 import com.batdongsan.service.ProjectService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +22,11 @@ public class ProjectController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProjectSummaryRes>>> getProjects(
+    public ResponseEntity<ApiResponse<PageResponse<ProjectSummaryRes>>> getProjects(
             @Valid @ModelAttribute ProjectFilter filter,
             @Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(projectService.getProjects(filter,
-                PageRequest.of(pageReq.getPage(), pageReq.getSize()))));
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(projectService.getProjects(filter,
+                PageRequest.of(pageReq.getPage(), pageReq.getSize())))));
     }
 
     @GetMapping("/{slug}")
