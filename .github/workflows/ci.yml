@@ -23,6 +23,27 @@ jobs:
       - name: Test backend (H2 and real MySQL migrations)
         working-directory: backend
         run: ./mvnw --batch-mode verify
+      - name: Annotate backend test failures
+        if: failure()
+        working-directory: backend
+        shell: bash
+        run: |
+          shopt -s nullglob
+          found_failure=false
+          for report in target/surefire-reports/*.txt target/failsafe-reports/*.txt; do
+            if grep -Eq 'Failures: [1-9]|Errors: [1-9]' "$report"; then
+              found_failure=true
+              test_class=$(basename "$report" .txt)
+              message=$(grep -E -m1 'Tests run:' "$report")
+              message=${message//'%'/'%25'}
+              message=${message//$'\r'/'%0D'}
+              message=${message//$'\n'/'%0A'}
+              echo "::error file=$report,title=Backend test failure::$test_class: $message"
+            fi
+          done
+          if [ "$found_failure" = false ]; then
+            echo "::error title=Backend verify failed::Maven failed without a failing Surefire or Failsafe report."
+          fi
 
   frontend:
     runs-on: ubuntu-latest
