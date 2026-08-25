@@ -1,6 +1,7 @@
 package com.batdongsan.config;
 
 import com.batdongsan.security.JwtAuthFilter;
+import com.batdongsan.security.RateLimitFilter;
 import com.batdongsan.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -25,9 +26,11 @@ import java.nio.charset.StandardCharsets;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, RateLimitFilter rateLimitFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -55,12 +58,20 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/v1/auth/register",
                     "/api/v1/auth/login",
-                    "/api/v1/auth/refresh").permitAll()
+                    "/api/v1/auth/refresh",
+                    "/api/v1/auth/logout").permitAll()
+                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/users/me/upgrade-seller").hasRole("USER")
-                .requestMatchers("/api/v1/users/me", "/api/v1/auth/logout", "/api/v1/auth/password").authenticated()
+                .requestMatchers("/api/v1/users/me", "/api/v1/auth/password").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/payments/sepay/ipn").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/payments/sepay/seller-upgrade").hasRole("USER")
+                .requestMatchers("/api/v1/payments/**").authenticated()
                 .requestMatchers("/api/v1/saved-listings/**").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/v1/listings/**", "/api/v1/projects/**").permitAll()
+                .requestMatchers("/api/v1/notifications/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/listings/*/views").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/api/v1/listings/**", "/api/v1/projects/**", "/api/v1/categories").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/locations/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/seller/**").hasRole("SELLER")
@@ -70,6 +81,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/listings/**").hasAnyRole("SELLER", "ADMIN")
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

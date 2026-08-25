@@ -14,3 +14,26 @@ spring:
 jwt:
   secret: test-only-secret-key-that-is-at-least-32-bytes-long
   expiration: 3600000
+
+app:
+  ai:
+    gemini:
+      enabled: false
+      api-key:
+      base-url: http://localhost
+      connect-timeout-ms: 500
+      read-timeout-ms: 1000
+      max-attempts: 1
+      reservation-lease-seconds: 90
+
+payment:
+  seller-upgrade:
+    amount: 99000
+    currency: VND
+    pending-minutes: 15
+  sepay:
+    merchant-id: SP-TEST-FIXTURE
+    secret-key: test-only-sepay-secret
+    environment: sandbox
+    checkout-url: https://pay-sandbox.sepay.vn/v1/checkout/init
+    frontend-base-url: http://localhost:5173

@@ -15,11 +15,14 @@ import java.util.List;
 public class AdminService {
     private final ListingRepository listings; private final UserRepository users; private final CategoryRepository categories;
     private final RefreshTokenRepository refreshTokens; private final ListingStatusHistoryRepository histories;
+    private final NotificationService notificationService;
 
     public AdminService(ListingRepository listings, UserRepository users, CategoryRepository categories,
-                        RefreshTokenRepository refreshTokens, ListingStatusHistoryRepository histories) {
+                        RefreshTokenRepository refreshTokens, ListingStatusHistoryRepository histories,
+                        NotificationService notificationService) {
         this.listings=listings; this.users=users; this.categories=categories;
         this.refreshTokens=refreshTokens; this.histories=histories;
+        this.notificationService=notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +44,8 @@ public class AdminService {
         listing.setApprovedAt(now); listing.setPublishedAt(now); listing.setExpiresAt(now.plusDays(30));
         listing.setRejectionReason(null); listing.setUpdatedAt(now);
         history(listing,ListingStatus.PENDING,ListingStatus.ACTIVE,admin,"Quản trị viên đã duyệt tin");
-        return new AdminListingRes(listings.saveAndFlush(listing));
+        Listing saved=listings.saveAndFlush(listing); notificationService.notifyListingApproved(saved);
+        return new AdminListingRes(saved);
     }
 
     @Transactional
@@ -50,7 +54,8 @@ public class AdminService {
         String reason=request.getReason().trim(); listing.setStatus(ListingStatus.REJECTED); listing.setRejectionReason(reason);
         listing.setApprovedBy(null); listing.setApprovedAt(null); listing.setPublishedAt(null); listing.setExpiresAt(null);
         listing.setUpdatedAt(LocalDateTime.now()); history(listing,ListingStatus.PENDING,ListingStatus.REJECTED,admin,reason);
-        return new AdminListingRes(listings.saveAndFlush(listing));
+        Listing saved=listings.saveAndFlush(listing); notificationService.notifyListingRejected(saved);
+        return new AdminListingRes(saved);
     }
 
     @Transactional

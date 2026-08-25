@@ -10,12 +10,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.servlet.http.Cookie;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,7 +36,7 @@ class UserSessionFlowIntegrationTest {
                                 {
                                   "name":"Nguyễn Minh An",
                                   "email":"FLOW@HOMIGO.TEST",
-                                  "password":"secret123",
+                                  "password":"correct-horse-battery-staple",
                                   "phone":"0901234567"
                                 }
                                 """))
@@ -45,17 +47,17 @@ class UserSessionFlowIntegrationTest {
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"flow@homigo.test","password":"secret123"}
+                                {"email":"flow@homigo.test","password":"correct-horse-battery-staple"}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").doesNotExist())
+                .andExpect(cookie().httpOnly("homigo_refresh", true))
                 .andReturn();
 
         String accessToken = JsonPath.read(
                 loginResult.getResponse().getContentAsString(), "$.data.accessToken");
-        String firstRefreshToken = JsonPath.read(
-                loginResult.getResponse().getContentAsString(), "$.data.refreshToken");
+        Cookie firstRefreshCookie = loginResult.getResponse().getCookie("homigo_refresh");
 
         mockMvc.perform(get("/api/v1/users/me")
                         .header("Authorization", bearer(accessToken)))
@@ -71,39 +73,31 @@ class UserSessionFlowIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.name").value("Nguyễn An"));
 
-        mockMvc.perform(post("/api/v1/users/me/upgrade-seller")
-                        .header("Authorization", bearer(accessToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.role").value("SELLER"));
-
         MvcResult refreshResult = mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(refreshBody(firstRefreshToken)))
+                        .cookie(firstRefreshCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.user.email").value("flow@homigo.test"))
+                .andExpect(jsonPath("$.data.refreshToken").doesNotExist())
                 .andReturn();
 
         String rotatedAccessToken = JsonPath.read(
                 refreshResult.getResponse().getContentAsString(), "$.data.accessToken");
-        String rotatedRefreshToken = JsonPath.read(
-                refreshResult.getResponse().getContentAsString(), "$.data.refreshToken");
+        Cookie rotatedRefreshCookie = refreshResult.getResponse().getCookie("homigo_refresh");
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(refreshBody(firstRefreshToken)))
+                        .cookie(firstRefreshCookie))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
 
         mockMvc.perform(post("/api/v1/auth/logout")
                         .header("Authorization", bearer(rotatedAccessToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(refreshBody(rotatedRefreshToken)))
-                .andExpect(status().isOk());
+                        .cookie(rotatedRefreshCookie))
+                .andExpect(status().isOk())
+                .andExpect(cookie().maxAge("homigo_refresh", 0));
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(refreshBody(rotatedRefreshToken)))
+                        .cookie(rotatedRefreshCookie))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("BAD_REQUEST"));
     }
@@ -112,7 +106,4 @@ class UserSessionFlowIntegrationTest {
         return "Bearer " + token;
     }
 
-    private String refreshBody(String token) {
-        return "{\"refreshToken\":\"" + token + "\"}";
-    }
 }

@@ -2,20 +2,24 @@ package com.batdongsan.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterReq {
     @NotBlank(message = "Tên không được để trống.")
+    @Size(min = 2, max = 100, message = "Tên phải có từ 2 đến 100 ký tự.")
     private String name;
 
     @NotBlank(message = "Email không được để trống.")
     @Email(message = "Email không hợp lệ.")
+    @Size(max = 254, message = "Email không được vượt quá 254 ký tự.")
     private String email;
 
     @NotBlank(message = "Mật khẩu không được để trống.")
-    @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự.")
+    @Size(min = 12, max = 72, message = "Mật khẩu phải có từ 12 đến 72 ký tự.")
     private String password;
 
+    @Pattern(regexp = "^$|^\\+?[0-9]{9,15}$", message = "Số điện thoại không hợp lệ.")
     private String phone;
 
     public RegisterReq() {}

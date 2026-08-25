@@ -8,6 +8,7 @@ import com.batdongsan.repository.specification.ListingSpecifications;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,12 +23,17 @@ public class ListingService {
     private final UserRepository users;
     private final SavedListingRepository savedListings;
     private final ListingStatusHistoryRepository histories;
+    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     public ListingService(ListingRepository listings, CategoryRepository categories, DistrictRepository districts,
                           WardRepository wards, ProjectRepository projects, UserRepository users,
-                          SavedListingRepository savedListings, ListingStatusHistoryRepository histories) {
+                          SavedListingRepository savedListings, ListingStatusHistoryRepository histories,
+                          ApplicationEventPublisher eventPublisher, NotificationService notificationService) {
         this.listings= listings; this.categories=categories; this.districts=districts; this.wards=wards;
         this.projects=projects; this.users=users; this.savedListings=savedListings; this.histories=histories;
+        this.eventPublisher=eventPublisher;
+        this.notificationService=notificationService;
     }
 
     @Transactional
@@ -43,24 +49,35 @@ public class ListingService {
         Listing listing=owned(id,email);
         if(request.getVersion()==null||!Objects.equals(request.getVersion(),listing.getVersion()))
             throw new ConflictException("Tin đăng đã được thay đổi. Vui lòng tải lại trước khi cập nhật.");
-        if(listing.getStatus()==ListingStatus.PENDING||listing.getStatus()==ListingStatus.EXPIRED)
+        if(listing.getStatus()==ListingStatus.PENDING)
             throw new BadRequestException("Không thể sửa tin ở trạng thái hiện tại.");
         ListingStatus before=listing.getStatus(); apply(listing,request); listing.setUpdatedAt(LocalDateTime.now());
         if(before==ListingStatus.ACTIVE){listing.setStatus(ListingStatus.PENDING);listing.setRejectionReason(null);
             record(listing,before,ListingStatus.PENDING,listing.getUser(),"Nội dung được chỉnh sửa và cần duyệt lại");}
         else if(before==ListingStatus.REJECTED){listing.setStatus(ListingStatus.DRAFT);
             record(listing,before,ListingStatus.DRAFT,listing.getUser(),"Chỉnh sửa tin bị từ chối");}
-        return new ListingRes(listings.saveAndFlush(listing));
+        else if(before==ListingStatus.EXPIRED){listing.setStatus(ListingStatus.DRAFT);listing.setExpiresAt(null);
+            listing.setPublishedAt(null);listing.setApprovedAt(null);listing.setApprovedBy(null);
+            record(listing,before,ListingStatus.DRAFT,listing.getUser(),"Chỉnh sửa tin hết hạn để tạo bản nháp mới");}
+        Listing saved=listings.saveAndFlush(listing);
+        if(before==ListingStatus.ACTIVE)notificationService.notifyListingSubmitted(saved);
+        return new ListingRes(saved);
     }
 
-    @Transactional public void deleteListing(Long id,String email){listings.delete(owned(id,email));}
+    @Transactional public void deleteListing(Long id,String email){Listing listing=owned(id,email);
+        if(!EnumSet.of(ListingStatus.DRAFT,ListingStatus.REJECTED,ListingStatus.INACTIVE,ListingStatus.EXPIRED).contains(listing.getStatus()))
+            throw new BadRequestException("Chỉ có thể xóa tin nháp, bị từ chối, đã ẩn hoặc đã hết hạn.");
+        List<String> storageKeys=listing.getImages().stream().map(ListingImage::getStorageKey).filter(Objects::nonNull).toList();
+        listings.delete(listing);
+        if(!storageKeys.isEmpty())eventPublisher.publishEvent(new ListingFilesDeletedEvent(storageKeys));}
 
     @Transactional
     public ListingRes submitListing(Long id,String email){Listing listing=owned(id,email);
         if(!EnumSet.of(ListingStatus.DRAFT,ListingStatus.REJECTED,ListingStatus.INACTIVE).contains(listing.getStatus()))
             throw new BadRequestException("Chỉ có thể gửi duyệt tin nháp, bị từ chối hoặc đã ẩn.");
         transition(listing,ListingStatus.PENDING,listing.getUser(),"Người bán gửi duyệt");listing.setRejectionReason(null);
-        return new ListingRes(listings.saveAndFlush(listing));}
+        Listing saved=listings.saveAndFlush(listing);notificationService.notifyListingSubmitted(saved);
+        return new ListingRes(saved);}
 
     @Transactional
     public ListingRes deactivateListing(Long id,String email){Listing listing=owned(id,email);
@@ -74,7 +91,8 @@ public class ListingService {
 
     @Transactional
     public int expireDueListings(LocalDateTime now){List<Listing> due=listings.findByStatusAndExpiresAtBefore(ListingStatus.ACTIVE,now);
-        due.forEach(listing->transition(listing,ListingStatus.EXPIRED,listing.getUser(),"Hệ thống tự động hết hạn sau 30 ngày"));
+        due.forEach(listing->{transition(listing,ListingStatus.EXPIRED,listing.getUser(),"Hệ thống tự động hết hạn sau 30 ngày");
+            notificationService.notifyListingExpired(listing);});
         listings.saveAll(due);return due.size();}
 
     @Transactional(readOnly=true)
@@ -109,6 +127,10 @@ public class ListingService {
         Ward ward=request.getWardId()==null?null:wards.findById(request.getWardId()).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy phường/xã."));
         if(ward!=null&&!Objects.equals(ward.getDistrict().getId(),district.getId()))throw new BadRequestException("Phường/xã không thuộc quận/huyện đã chọn.");
         Project project=request.getProjectId()==null?null:projects.findById(request.getProjectId()).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy dự án."));
+        if(project!=null&&!Objects.equals(project.getDistrict().getId(),district.getId()))
+            throw new BadRequestException("Dự án không thuộc quận/huyện đã chọn.");
+        if(project!=null&&project.getWard()!=null&&ward!=null&&!Objects.equals(project.getWard().getId(),ward.getId()))
+            throw new BadRequestException("Dự án không thuộc phường/xã đã chọn.");
         listing.setCategory(category);listing.setDistrict(district);listing.setWard(ward);listing.setProject(project);
         listing.setTitle(request.getTitle().trim());listing.setDescription(request.getDescription().trim());listing.setPrice(request.getPrice());
         listing.setArea(request.getArea());listing.setAddress(request.getAddress().trim());listing.setLatitude(request.getLatitude());

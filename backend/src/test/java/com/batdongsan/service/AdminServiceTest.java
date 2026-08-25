@@ -27,13 +27,14 @@ class AdminServiceTest {
     @Mock CategoryRepository categories;
     @Mock RefreshTokenRepository refreshTokens;
     @Mock ListingStatusHistoryRepository histories;
+    @Mock NotificationService notificationService;
     private AdminService service;
     private User admin;
     private User seller;
 
     @BeforeEach
     void setUp() {
-        service = new AdminService(listings, users, categories, refreshTokens, histories);
+        service = new AdminService(listings, users, categories, refreshTokens, histories, notificationService);
         admin = user(1L, "admin@example.com", UserRole.ADMIN);
         seller = user(2L, "seller@example.com", UserRole.SELLER);
     }

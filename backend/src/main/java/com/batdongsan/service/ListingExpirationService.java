@@ -8,6 +8,6 @@ import java.time.LocalDateTime;
 public class ListingExpirationService {
     private final ListingService listings;
     public ListingExpirationService(ListingService listings){this.listings=listings;}
-    @Scheduled(cron="${listing.expiration-cron:0 0 1 * * *}")
+    @Scheduled(cron="${listing.expiration-cron:0 0 1 * * *}", zone="${app.business-zone:Asia/Ho_Chi_Minh}")
     public void expireListings(){listings.expireDueListings(LocalDateTime.now());}
 }

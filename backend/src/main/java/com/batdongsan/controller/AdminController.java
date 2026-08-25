@@ -4,6 +4,8 @@ import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.PageReq;
 import com.batdongsan.dto.PageResponse;
 import com.batdongsan.dto.admin.*;
+import com.batdongsan.dto.analytics.ListingStatisticsReq;
+import com.batdongsan.dto.analytics.ListingStatisticsRes;
 import com.batdongsan.dto.location.*;
 import com.batdongsan.dto.project.ProjectFilter;
 import com.batdongsan.dto.project.ProjectReq;
@@ -11,6 +13,7 @@ import com.batdongsan.dto.project.ProjectSummaryRes;
 import com.batdongsan.entity.ListingStatus;
 import com.batdongsan.service.AdminService;
 import com.batdongsan.service.LocationService;
+import com.batdongsan.service.ListingAnalyticsService;
 import com.batdongsan.service.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.*;
@@ -24,12 +27,14 @@ public class AdminController {
     private final AdminService adminService;
     private final ProjectService projectService;
     private final LocationService locationService;
+    private final ListingAnalyticsService analyticsService;
 
     public AdminController(AdminService adminService, ProjectService projectService,
-                           LocationService locationService) {
+                           LocationService locationService, ListingAnalyticsService analyticsService) {
         this.adminService = adminService;
         this.projectService = projectService;
         this.locationService = locationService;
+        this.analyticsService = analyticsService;
     }
 
     @GetMapping("/listings")
@@ -49,6 +54,13 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminListingRes>> reject(
             @PathVariable Long id, @Valid @RequestBody RejectListingReq request, Authentication auth) {
         return ResponseEntity.ok(ApiResponse.success(adminService.rejectListing(id, auth.getName(), request)));
+    }
+
+    @GetMapping("/listings/{id}/statistics")
+    public ResponseEntity<ApiResponse<ListingStatisticsRes>> listingStatistics(
+            @PathVariable Long id, @Valid @ModelAttribute ListingStatisticsReq request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                analyticsService.getAdminStatistics(id, request.getDays())));
     }
 
     @GetMapping("/users")

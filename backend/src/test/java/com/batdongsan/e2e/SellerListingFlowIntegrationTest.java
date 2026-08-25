@@ -26,6 +26,7 @@ class SellerListingFlowIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserRepository users; @Autowired ProvinceRepository provinces;
     @Autowired DistrictRepository districts; @Autowired CategoryRepository categories; @Autowired ListingRepository listings;
+    @Autowired ListingImageRepository listingImages;
 
     @BeforeEach
     void seed() {
@@ -52,8 +53,17 @@ class SellerListingFlowIntegrationTest {
         Listing created=listings.findAll().get(0);long id=created.getId();long version=created.getVersion();
 
         mvc.perform(multipart("/api/v1/seller/listings/{id}/images",id)
-                        .file(new MockMultipartFile("file","home.jpg","image/jpeg","image".getBytes())))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.startsWith("/uploads/")));
+                        .file(new MockMultipartFile("file","home.jpg","image/jpeg",
+                                new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0})))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").isNumber())
+                .andExpect(jsonPath("$.data.url").value(org.hamcrest.Matchers.startsWith("/uploads/")))
+                .andExpect(jsonPath("$.data.contentType").value("image/jpeg"))
+                .andExpect(jsonPath("$.data.sizeBytes").value(4));
+        mvc.perform(get(listingImages.findAll().get(0).getUrl())
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous()))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0}));
         mvc.perform(post("/api/v1/seller/listings/{id}/submit",id))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("PENDING"));
         mvc.perform(get("/api/v1/seller/listings"))

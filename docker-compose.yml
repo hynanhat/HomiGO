@@ -1,14 +1,15 @@
 services:
   db:
-    image: mysql:8
-    container_name: homigo_db
+    image: mysql:8.4
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: ${DB_NAME:-batdongsan}
       MYSQL_USER: ${DB_USER:-homigo}
       MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      TZ: ${APP_BUSINESS_ZONE:-Asia/Ho_Chi_Minh}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:${DB_PORT_FORWARD:-3306}:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -16,24 +17,72 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    networks: [homigo]
 
   backend:
     build: ./backend
-    container_name: homigo_backend
-    ports:
-      - "8080:8080"
+    restart: unless-stopped
+    expose:
+      - "8080"
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: ${DB_NAME:-batdongsan}
       DB_USER: ${DB_USER:-homigo}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      DB_USE_SSL: "false"
+      DB_ALLOW_PUBLIC_KEY_RETRIEVAL: "true"
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-900000}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
+      ANALYTICS_VIEWER_HASH_SECRET: ${ANALYTICS_VIEWER_HASH_SECRET:?Set ANALYTICS_VIEWER_HASH_SECRET in .env}
+      APP_BUSINESS_ZONE: ${APP_BUSINESS_ZONE:-Asia/Ho_Chi_Minh}
+      TZ: ${APP_BUSINESS_ZONE:-Asia/Ho_Chi_Minh}
+      FILE_UPLOAD_DIR: /app/uploads
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-Strict}
+      SEPAY_MERCHANT_ID: ${SEPAY_MERCHANT_ID:-}
+      SEPAY_SECRET_KEY: ${SEPAY_SECRET_KEY:-}
+      SEPAY_ENVIRONMENT: ${SEPAY_ENVIRONMENT:-sandbox}
+      SEPAY_CHECKOUT_URL: ${SEPAY_CHECKOUT_URL:-https://pay-sandbox.sepay.vn/v1/checkout/init}
+      SEPAY_FRONTEND_BASE_URL: ${SEPAY_FRONTEND_BASE_URL:-http://localhost}
+      GEMINI_ENABLED: ${GEMINI_ENABLED:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.7-flash}
+      GEMINI_API_VERSION: ${GEMINI_API_VERSION:-v1}
+      GEMINI_TIMEOUT_MS: ${GEMINI_TIMEOUT_MS:-15000}
+      GEMINI_MAX_ATTEMPTS: ${GEMINI_MAX_ATTEMPTS:-2}
+      GEMINI_MAX_OUTPUT_TOKENS: ${GEMINI_MAX_OUTPUT_TOKENS:-1024}
+      GEMINI_THINKING_LEVEL: ${GEMINI_THINKING_LEVEL:-minimal}
+      GEMINI_RESERVATION_LEASE_SECONDS: ${GEMINI_RESERVATION_LEASE_SECONDS:-90}
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health/readiness"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    networks: [homigo]
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [homigo]
 
 volumes:
   db_data:
+  uploads_data:
+
+networks:
+  homigo:
+    driver: bridge

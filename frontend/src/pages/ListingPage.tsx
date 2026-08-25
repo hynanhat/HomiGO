@@ -1,83 +1,44 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import ListingCard from '../components/ListingCard';
-import api from '../services/api';
+import { LayoutGrid, Rows3 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { EmptyState, ErrorState, Skeleton } from '@/components/feedback'
+import { Button, Pagination, Select } from '@/components/ui'
+import { ListingCard } from '@/features/listings/components/ListingCard'
+import { ListingFilterDrawer, ListingFilterPanel } from '@/features/listings/components/ListingFilters'
+import { useListingSearch } from '@/features/listings/listingQueries'
+import { parseListingSearchParams, serializeListingSearchState, updateListingFilters } from '@/features/listings/listingSearchState'
+import type { ListingSearchState, ListingSort } from '@/types/domain'
 
-const ListingPage = () => {
-  const [searchParams] = useSearchParams();
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-
-  useEffect(() => {
-    const fetchListings = async () => {
-      setLoading(true);
-      try {
-        const type = searchParams.get('type') || '';
-        const keyword = searchParams.get('q') || '';
-        // In a real app, you'd pass these as params, for now just basic fetch
-        const res = await api.get(`/listings?transactionType=${type}&keyword=${keyword}&page=${page}&size=12`);
-        setListings(res.data.data.content);
-        setTotalPages(res.data.data.totalPages);
-      } catch (error) {
-        console.error('Failed to fetch listings', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchListings();
-  }, [searchParams, page]);
+export default function ListingPage() {
+  const [params, setParams] = useSearchParams()
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid')
+  const state = useMemo(() => parseListingSearchParams(params), [params])
+  const query = useListingSearch(state)
+  const update = (updates: Partial<ListingSearchState>) => setParams(serializeListingSearchState(updateListingFilters(state, updates)))
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Kết Quả Tìm Kiếm</h1>
-        
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-          </div>
-        ) : (
-          <>
-            {listings.length === 0 ? (
-              <div className="text-center text-gray-500 py-12 bg-white rounded-xl shadow">
-                Không tìm thấy bất động sản nào phù hợp.
+    <main className="min-h-screen bg-slate-50 py-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-6"><h1 className="text-3xl font-extrabold text-ink-950">Bất động sản</h1><p className="mt-2 text-ink-600">Tìm kiếm tin đăng ACTIVE theo nhu cầu và khu vực của bạn.</p></div>
+        <ListingFilterDrawer value={state} onChange={update} />
+        <div className="mt-5 grid gap-6 lg:grid-cols-[18rem_1fr]">
+          <div className="hidden lg:block"><ListingFilterPanel value={state} onChange={update} /></div>
+          <section aria-label="Kết quả tìm kiếm">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+              <p className="font-semibold text-ink-800" aria-live="polite">{query.data ? `${query.data.totalElements.toLocaleString('vi-VN')} kết quả` : 'Đang tìm kiếm…'}</p>
+              <div className="flex items-end gap-2">
+                <Select label="Sắp xếp" value={state.sort} onChange={(event) => update({ sort: event.target.value as ListingSort })}><option value="newest">Mới nhất</option><option value="priceAsc">Giá tăng dần</option><option value="priceDesc">Giá giảm dần</option><option value="areaAsc">Diện tích tăng dần</option><option value="areaDesc">Diện tích giảm dần</option></Select>
+                <div className="hidden gap-1 sm:flex" aria-label="Kiểu hiển thị"><Button variant={layout === 'grid' ? 'primary' : 'secondary'} aria-label="Dạng lưới" onClick={() => setLayout('grid')}><LayoutGrid className="size-4" /></Button><Button variant={layout === 'list' ? 'primary' : 'secondary'} aria-label="Dạng danh sách" onClick={() => setLayout('list')}><Rows3 className="size-4" /></Button></div>
               </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {listings.map((listing: any) => (
-                    <ListingCard key={listing.id} listing={listing} />
-                  ))}
-                </div>
-                
-                {totalPages > 1 && (
-                  <div className="flex justify-center mt-8 gap-2">
-                    <button 
-                      disabled={page === 0}
-                      onClick={() => setPage(p => Math.max(0, p - 1))}
-                      className="px-4 py-2 border rounded-md disabled:opacity-50 hover:bg-gray-100"
-                    >
-                      Trước
-                    </button>
-                    <span className="px-4 py-2">Trang {page + 1} / {totalPages}</span>
-                    <button 
-                      disabled={page >= totalPages - 1}
-                      onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                      className="px-4 py-2 border rounded-md disabled:opacity-50 hover:bg-gray-100"
-                    >
-                      Sau
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
+            </div>
+            {query.isPending && <div className="grid gap-5 md:grid-cols-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-80" />)}</div>}
+            {query.isError && <ErrorState description="Không thể tải danh sách bất động sản." onRetry={() => query.refetch()} />}
+            {query.data?.empty && <EmptyState title="Không tìm thấy bất động sản" description="Hãy thử bỏ bớt bộ lọc hoặc thay đổi khu vực tìm kiếm." />}
+            {query.data && !query.data.empty && <div className={layout === 'grid' ? 'grid gap-5 md:grid-cols-2' : 'grid gap-5'}>{query.data.content.map((listing) => <ListingCard key={listing.publicCode} listing={listing} compact={layout === 'list'} />)}</div>}
+            {query.data && <div className="mt-7"><Pagination page={state.page} totalPages={query.data.totalPages} disabled={query.isFetching} onPageChange={(page) => update({ page })} /></div>}
+          </section>
+        </div>
       </div>
-    </div>
-  );
-};
-
-export default ListingPage;
+    </main>
+  )
+}

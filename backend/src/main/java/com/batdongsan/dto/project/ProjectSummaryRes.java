@@ -14,6 +14,9 @@ public class ProjectSummaryRes {
     private final Long wardId;
     private final String wardName;
     private final String address;
+    private final String description;
+    private final Double latitude;
+    private final Double longitude;
     private final String status;
     private final BigDecimal priceFrom;
     private final BigDecimal priceTo;
@@ -29,6 +32,9 @@ public class ProjectSummaryRes {
         wardId = project.getWard() == null ? null : project.getWard().getId();
         wardName = project.getWard() == null ? null : project.getWard().getName();
         address = project.getAddress();
+        description = project.getDescription();
+        latitude = project.getLatitude();
+        longitude = project.getLongitude();
         status = project.getStatus();
         priceFrom = project.getPriceFrom();
         priceTo = project.getPriceTo();
@@ -44,6 +50,9 @@ public class ProjectSummaryRes {
     public Long getWardId() { return wardId; }
     public String getWardName() { return wardName; }
     public String getAddress() { return address; }
+    public String getDescription() { return description; }
+    public Double getLatitude() { return latitude; }
+    public Double getLongitude() { return longitude; }
     public String getStatus() { return status; }
     public BigDecimal getPriceFrom() { return priceFrom; }
     public BigDecimal getPriceTo() { return priceTo; }

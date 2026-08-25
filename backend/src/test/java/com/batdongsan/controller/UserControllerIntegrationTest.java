@@ -61,12 +61,11 @@ class UserControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "upgrade@homigo.test", roles = "USER")
-    void userCanUpgradeToSellerImmediately() throws Exception {
+    void freeSellerUpgradeEndpointIsNotAvailable() throws Exception {
         userRepository.save(activeUser("upgrade@homigo.test", UserRole.USER));
 
         mockMvc.perform(post("/api/v1/users/me/upgrade-seller"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.role").value("SELLER"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -88,7 +87,8 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/auth/refresh']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/auth/logout']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/users/me']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/users/me/upgrade-seller']").exists());
+                .andExpect(jsonPath("$.paths['/api/v1/users/me/upgrade-seller']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/v1/payments/sepay/seller-upgrade']").exists());
     }
 
     private User activeUser(String email, UserRole role) {

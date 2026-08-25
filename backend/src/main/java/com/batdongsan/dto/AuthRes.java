@@ -1,5 +1,7 @@
 package com.batdongsan.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class AuthRes {
     private String accessToken;
     private String refreshToken;
@@ -16,6 +18,7 @@ public class AuthRes {
 
     public String getAccessToken() { return accessToken; }
     public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+    @JsonIgnore
     public String getRefreshToken() { return refreshToken; }
     public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
     public String getTokenType() { return tokenType; }

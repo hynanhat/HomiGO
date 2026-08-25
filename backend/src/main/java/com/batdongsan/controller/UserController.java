@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,10 +42,4 @@ public class UserController {
                 userService.updateProfile(authentication.getName(), req)));
     }
 
-    @PostMapping("/me/upgrade-seller")
-    @Operation(summary = "Nâng tài khoản USER thành SELLER")
-    public ResponseEntity<ApiResponse<UserProfileRes>> upgradeToSeller(Authentication authentication) {
-        return ResponseEntity.ok(ApiResponse.success(
-                userService.upgradeToSeller(authentication.getName())));
-    }
 }

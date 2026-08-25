@@ -1,0 +1,2 @@
+import { Button } from '@/components/ui'
+export function ConflictNotice({ onReload }: { onReload: () => void }) { return <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-950"><p className="font-bold">Dữ liệu đã thay đổi</p><p className="mt-1 text-sm">Hãy tải phiên bản mới trước khi tiếp tục.</p><Button className="mt-3" size="sm" variant="secondary" onClick={onReload}>Tải lại</Button></div> }

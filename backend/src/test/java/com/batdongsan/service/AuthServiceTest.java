@@ -204,7 +204,7 @@ class AuthServiceTest {
                 .roles("USER")
                 .build();
 
-        when(refreshTokenRepository.findByTokenHash(sha256("old-refresh-token")))
+        when(refreshTokenRepository.findByTokenHashForUpdate(sha256("old-refresh-token")))
                 .thenReturn(Optional.of(storedToken));
         when(userDetailsService.loadUserByUsername(user.getEmail())).thenReturn(userDetails);
         when(jwtUtil.generateToken(userDetails)).thenReturn("new-access-token");
@@ -215,6 +215,7 @@ class AuthServiceTest {
         assertTrue(response.getRefreshToken() != null && !response.getRefreshToken().isBlank());
         assertTrue(storedToken.getRevokedAt() != null);
         verify(refreshTokenRepository).save(storedToken);
+        verify(refreshTokenRepository).findByTokenHashForUpdate(sha256("old-refresh-token"));
     }
 
     @Test
@@ -222,7 +223,7 @@ class AuthServiceTest {
         User user = activeUser("user@example.com");
         RefreshToken storedToken = activeRefreshToken(user, "revoked-token");
         storedToken.setRevokedAt(LocalDateTime.now().minusMinutes(1));
-        when(refreshTokenRepository.findByTokenHash(sha256("revoked-token")))
+        when(refreshTokenRepository.findByTokenHashForUpdate(sha256("revoked-token")))
                 .thenReturn(Optional.of(storedToken));
 
         assertThrows(BadRequestException.class,
@@ -234,7 +235,7 @@ class AuthServiceTest {
     void logoutRevokesRefreshTokenOwnedByCurrentUser() throws Exception {
         User user = activeUser("user@example.com");
         RefreshToken storedToken = activeRefreshToken(user, "logout-token");
-        when(refreshTokenRepository.findByTokenHash(sha256("logout-token")))
+        when(refreshTokenRepository.findByTokenHashForUpdate(sha256("logout-token")))
                 .thenReturn(Optional.of(storedToken));
 
         authService.logout("user@example.com", refreshRequest("logout-token"));

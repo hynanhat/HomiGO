@@ -1,8 +1,14 @@
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
   profiles:
-    active: dev
+    default: dev
   application:
     name: backend
+  jackson:
+    time-zone: ${APP_BUSINESS_ZONE:Asia/Ho_Chi_Minh}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -13,10 +19,11 @@ spring:
   servlet:
     multipart:
       max-file-size: 5MB
-      max-request-size: 5MB
+      max-request-size: 6MB
 
 server:
   port: 8080
+  forward-headers-strategy: framework
   servlet:
     context-path: /
 
@@ -24,9 +31,68 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:900000} # 15 minutes
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
+  revoked-token-retention-days: ${JWT_REVOKED_TOKEN_RETENTION_DAYS:7}
+  refresh-token-cleanup-cron: ${JWT_REFRESH_TOKEN_CLEANUP_CRON:0 30 2 * * *}
+
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:uploads}
+
+app:
+  business-zone: ${APP_BUSINESS_ZONE:Asia/Ho_Chi_Minh}
+  ai:
+    gemini:
+      enabled: ${GEMINI_ENABLED:false}
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-3.7-flash}
+      api-version: ${GEMINI_API_VERSION:v1}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      connect-timeout-ms: ${GEMINI_CONNECT_TIMEOUT_MS:2000}
+      read-timeout-ms: ${GEMINI_TIMEOUT_MS:15000}
+      max-attempts: ${GEMINI_MAX_ATTEMPTS:2}
+      max-output-tokens: ${GEMINI_MAX_OUTPUT_TOKENS:1024}
+      thinking-level: ${GEMINI_THINKING_LEVEL:minimal}
+      reservation-lease-seconds: ${GEMINI_RESERVATION_LEASE_SECONDS:90}
+      cleanup-cron: ${GEMINI_QUOTA_CLEANUP_CRON:0 * * * * *}
+  auth-cookie:
+    secure: ${AUTH_COOKIE_SECURE:false}
+    same-site: ${AUTH_COOKIE_SAME_SITE:Strict}
+  rate-limit:
+    login-per-minute: ${RATE_LIMIT_LOGIN:10}
+    register-per-minute: ${RATE_LIMIT_REGISTER:5}
+    refresh-per-minute: ${RATE_LIMIT_REFRESH:30}
+    views-per-minute: ${RATE_LIMIT_VIEWS:60}
+    ipn-per-minute: ${RATE_LIMIT_IPN:120}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+
+analytics:
+  viewer-hash-secret: ${ANALYTICS_VIEWER_HASH_SECRET:${jwt.secret}}
+
+payment:
+  seller-upgrade:
+    amount: ${SELLER_UPGRADE_PRICE:99000}
+    currency: VND
+    pending-minutes: ${SELLER_UPGRADE_PENDING_MINUTES:15}
+  sepay:
+    merchant-id: ${SEPAY_MERCHANT_ID:}
+    secret-key: ${SEPAY_SECRET_KEY:}
+    environment: ${SEPAY_ENVIRONMENT:sandbox}
+    checkout-url: ${SEPAY_CHECKOUT_URL:https://pay-sandbox.sepay.vn/v1/checkout/init}
+    frontend-base-url: ${SEPAY_FRONTEND_BASE_URL:http://localhost:5173}
 
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

@@ -15,7 +15,10 @@ Page response có cấu trúc cố định: `content`, `number`, `size`, `totalE
 | PUT | `/auth/password` | Authenticated | Đổi mật khẩu và thu hồi phiên cũ |
 | GET | `/users/me` | Authenticated | Hồ sơ hiện tại |
 | PUT | `/users/me` | Authenticated | Cập nhật hồ sơ |
-| POST | `/users/me/upgrade-seller` | USER | Nâng thành SELLER |
+| GET | `/payments/sepay/seller-upgrade/offer` | Authenticated | Xem giá và trạng thái cấu hình SePay |
+| POST | `/payments/sepay/seller-upgrade` | USER | Tạo checkout trả phí; không nâng quyền trực tiếp |
+| GET | `/payments/sepay/seller-upgrade/{orderCode}` | Owner | Xem trạng thái thanh toán |
+| POST | `/payments/sepay/ipn` | SePay/X-Secret-Key | Xác nhận thanh toán và nâng thành SELLER |
 
 ## Public discovery
 
@@ -29,6 +32,7 @@ Sort whitelist: `newest`, `priceAsc`, `priceDesc`, `areaAsc`, `areaDesc`. Chỉ 
 | GET | `/listings/{publicCode}` | Public |
 | GET | `/projects` | Public |
 | GET | `/projects/{slug}` | Public |
+| GET | `/categories` | Public; paginated, sorted by name then id |
 | GET | `/locations/provinces` | Public |
 | GET | `/locations/provinces/{id}/districts` | Public |
 | GET | `/locations/districts/{id}/wards` | Public |
@@ -49,7 +53,7 @@ Các danh sách location cũng nhận `page`, `size` theo chuẩn phân trang ch
 | DELETE | `/seller/listings/{id}` | Owner/ADMIN |
 | POST | `/seller/listings/{id}/submit` | Owner |
 | POST | `/seller/listings/{id}/deactivate` | Owner |
-| POST | `/seller/listings/{id}/images` | Owner; multipart, max 10 total |
+| POST | `/seller/listings/{id}/images` | Owner; multipart, max 10 total; returns image ID and metadata |
 | DELETE | `/seller/listings/{id}/images/{imageId}` | Owner |
 
 Create defaults to DRAFT. Submit transitions DRAFT/REJECTED/INACTIVE → PENDING. Editing ACTIVE moves it to PENDING.
@@ -85,7 +89,7 @@ Create defaults to DRAFT. Submit transitions DRAFT/REJECTED/INACTIVE → PENDING
 
 ## Security matrix
 
-- Public: chỉ đọc listing ACTIVE, project và location.
-- USER: public + favorite/profile/upgrade seller.
+- Public: chỉ đọc listing ACTIVE, project, category và location.
+- USER: public + favorite/profile + tạo checkout nâng cấp; chỉ IPN SePay hợp lệ mới cấp SELLER.
 - SELLER: USER + quản lý listing sở hữu.
 - ADMIN: moderation và master data; không dùng seller ownership endpoint để âm thầm sửa nội dung.

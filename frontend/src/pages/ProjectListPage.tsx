@@ -1,7 +1,17 @@
+import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { EmptyState, ErrorState, Skeleton } from '@/components/feedback'
+import { Pagination } from '@/components/ui'
+import { ProjectCard } from '@/features/projects/components/ProjectCard'
+import { ProjectFilters } from '@/features/projects/components/ProjectFilters'
+import { useProjectSearch } from '@/features/projects/projectQueries'
+import { parseProjectSearchParams, serializeProjectSearchState, updateProjectFilters } from '@/features/projects/projectSearchState'
+import type { ProjectSearchState } from '@/types/domain'
 
-
-const ProjectListPage = () => {
-  return <div className="p-8 text-center text-2xl font-bold">Danh sách dự án</div>;
-};
-
-export default ProjectListPage;
+export default function ProjectListPage() {
+  const [params, setParams] = useSearchParams()
+  const state = useMemo(() => parseProjectSearchParams(params), [params])
+  const query = useProjectSearch(state)
+  const update = (updates: Partial<ProjectSearchState>) => setParams(serializeProjectSearchState(updateProjectFilters(state, updates)))
+  return <main className="min-h-screen bg-slate-50 py-10"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><h1 className="text-3xl font-extrabold text-ink-950">Dự án bất động sản</h1><p className="mt-2 text-ink-600">Thông tin quy hoạch, tiến độ và các tin đăng đang hoạt động.</p><div className="mt-7"><ProjectFilters value={state} onChange={update} /></div><p className="my-6 font-semibold" aria-live="polite">{query.data ? `${query.data.totalElements} dự án` : 'Đang tải dự án…'}</p>{query.isPending && <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-64" />)}</div>}{query.isError && <ErrorState onRetry={() => query.refetch()} />}{query.data?.empty && <EmptyState title="Không tìm thấy dự án" />}{query.data && !query.data.empty && <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{query.data.content.map((project) => <ProjectCard key={project.slug} project={project} />)}</div>}{query.data && <div className="mt-8"><Pagination page={state.page} totalPages={query.data.totalPages} onPageChange={(page) => update({ page })} /></div>}</div></main>
+}

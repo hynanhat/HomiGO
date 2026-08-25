@@ -107,8 +107,13 @@ public class AuthService {
 
     @Transactional
     public TokenRefreshRes refresh(RefreshTokenReq req) {
+        return refresh(req.getRefreshToken());
+    }
+
+    @Transactional
+    public TokenRefreshRes refresh(String rawRefreshToken) {
         LocalDateTime now = LocalDateTime.now();
-        RefreshToken currentToken = refreshTokenRepository.findByTokenHash(hashToken(req.getRefreshToken()))
+        RefreshToken currentToken = refreshTokenRepository.findByTokenHashForUpdate(hashToken(rawRefreshToken))
                 .orElseThrow(() -> new BadRequestException("Refresh token không hợp lệ."));
 
         if (!currentToken.isActive(now)) {
@@ -124,12 +129,12 @@ public class AuthService {
         refreshTokenRepository.save(currentToken);
 
         TokenPair tokens = issueTokenPair(user);
-        return new TokenRefreshRes(tokens.accessToken(), tokens.refreshToken());
+        return new TokenRefreshRes(tokens.accessToken(), tokens.refreshToken(), toUserDto(user));
     }
 
     @Transactional
     public void logout(String email, RefreshTokenReq req) {
-        RefreshToken token = refreshTokenRepository.findByTokenHash(hashToken(req.getRefreshToken()))
+        RefreshToken token = refreshTokenRepository.findByTokenHashForUpdate(hashToken(req.getRefreshToken()))
                 .orElseThrow(() -> new BadRequestException("Refresh token không hợp lệ."));
 
         if (!token.getUser().getEmail().equalsIgnoreCase(email)) {
@@ -143,12 +148,26 @@ public class AuthService {
     }
 
     @Transactional
+    public void logout(String rawRefreshToken) {
+        refreshTokenRepository.findByTokenHashForUpdate(hashToken(rawRefreshToken))
+                .ifPresent(token -> {
+                    if (token.getRevokedAt() == null) {
+                        token.setRevokedAt(LocalDateTime.now());
+                        refreshTokenRepository.save(token);
+                    }
+                });
+    }
+
+    @Transactional
     public void changePassword(String email, PasswordChangeReq req) {
         User user = userRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng."));
 
         if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPasswordHash())) {
             throw new BadRequestException("Mật khẩu hiện tại không đúng.");
+        }
+        if (passwordEncoder.matches(req.getNewPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("Mật khẩu mới phải khác mật khẩu hiện tại.");
         }
 
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));

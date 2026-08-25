@@ -1,6 +1,7 @@
 package com.batdongsan.service;
 
 import com.batdongsan.entity.Listing;
+import com.batdongsan.entity.ListingStatus;
 import com.batdongsan.entity.User;
 import com.batdongsan.exception.BadRequestException;
 import com.batdongsan.exception.ForbiddenException;
@@ -37,8 +38,9 @@ class FileStorageServiceTest {
     void rejectsNonOwnerAndEleventhImage() {
         Fixture f = fixture();
         Listing listing = listing();
-        when(f.listingRepository.findById(1L)).thenReturn(Optional.of(listing));
-        MockMultipartFile image = new MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[]{1});
+        when(f.listingRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(listing));
+        MockMultipartFile image = new MockMultipartFile("file", "a.jpg", "image/jpeg",
+                new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0});
 
         assertThrows(ForbiddenException.class, () -> f.service.addImage(1L, "other@example.com", image));
         when(f.imageRepository.countByListingId(1L)).thenReturn(10L);
@@ -46,15 +48,35 @@ class FileStorageServiceTest {
         verify(f.imageRepository, never()).save(Mockito.any());
     }
 
+    @Test
+    void rejectsImageChangesWhenListingIsPendingActiveOrExpired() {
+        MockMultipartFile image = new MockMultipartFile("file", "a.jpg", "image/jpeg",
+                new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0});
+        for (ListingStatus status : new ListingStatus[]{ListingStatus.PENDING, ListingStatus.ACTIVE, ListingStatus.EXPIRED}) {
+            Fixture fixture = fixture();
+            Listing listing = listing();
+            listing.setStatus(status);
+            when(fixture.listingRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(listing));
+
+            assertThrows(BadRequestException.class,
+                    () -> fixture.service.addImage(1L, "owner@example.com", image));
+            assertThrows(BadRequestException.class,
+                    () -> fixture.service.deleteImage(1L, 2L, "owner@example.com"));
+            verify(fixture.imageRepository, never()).save(Mockito.any());
+            verify(fixture.imageRepository, never()).delete(Mockito.any());
+        }
+    }
+
     private Fixture fixture() {
         ListingRepository listings = mock(ListingRepository.class);
         ListingImageRepository images = mock(ListingImageRepository.class);
-        return new Fixture(new FileStorageService(uploadDir.toString(), listings, images), listings, images);
+        return new Fixture(new FileStorageService(uploadDir.toString(), listings, images, event -> {}), listings, images);
     }
 
     private Listing listing() {
         User owner = new User(); owner.setEmail("owner@example.com");
         Listing listing = new Listing(); listing.setId(1L); listing.setUser(owner);
+        listing.setStatus(ListingStatus.DRAFT);
         return listing;
     }
 

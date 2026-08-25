@@ -40,6 +40,9 @@ class ProjectServiceTest {
         assertEquals(1, page.getTotalElements());
         assertEquals("riverside-residence", page.getContent().get(0).getSlug());
         assertEquals("Quận 1", page.getContent().get(0).getDistrictName());
+        assertEquals("Dự án ven sông trung tâm.", page.getContent().get(0).getDescription());
+        assertEquals(10.775, page.getContent().get(0).getLatitude());
+        assertEquals(106.700, page.getContent().get(0).getLongitude());
     }
 
     @Test

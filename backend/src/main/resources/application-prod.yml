@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?useSSL=${DB_USE_SSL:true}&serverTimezone=UTC&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY_RETRIEVAL:false}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,6 +16,12 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
 
+app:
+  ai:
+    gemini:
+      enabled: ${GEMINI_ENABLED:false}
+      api-key: ${GEMINI_API_KEY:}
+
 server:
   error:
     include-message: never
@@ -26,3 +32,9 @@ springdoc:
     enabled: ${OPENAPI_ENABLED:false}
   swagger-ui:
     enabled: ${OPENAPI_ENABLED:false}
+
+payment:
+  sepay:
+    environment: ${SEPAY_ENVIRONMENT:production}
+    checkout-url: ${SEPAY_CHECKOUT_URL:https://pay.sepay.vn/v1/checkout/init}
+    frontend-base-url: ${SEPAY_FRONTEND_BASE_URL}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-labelledby="title description">
+  <title id="title">Ảnh bất động sản HomiGO</title>
+  <desc id="description">Hình minh họa ngôi nhà khi tin đăng chưa có ảnh</desc>
+  <rect width="800" height="520" fill="#eef2f6"/>
+  <path d="M190 310 400 145l210 165v125H190Z" fill="#d9e1e9"/>
+  <path d="M140 326 400 120l260 206" fill="none" stroke="#102033" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M350 435V300h100v135" fill="#c84b31"/>
+</svg>

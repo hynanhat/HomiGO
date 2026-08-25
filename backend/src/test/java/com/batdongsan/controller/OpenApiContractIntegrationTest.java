@@ -26,7 +26,10 @@ class OpenApiContractIntegrationTest {
         String[] paths = {
                 "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh",
                 "/api/v1/auth/logout", "/api/v1/auth/password", "/api/v1/users/me",
-                "/api/v1/users/me/upgrade-seller",
+                "/api/v1/payments/sepay/seller-upgrade",
+                "/api/v1/payments/sepay/seller-upgrade/offer",
+                "/api/v1/payments/sepay/seller-upgrade/{orderCode}",
+                "/api/v1/payments/sepay/ipn",
                 "/api/v1/listings", "/api/v1/listings/{publicCode}",
                 "/api/v1/projects", "/api/v1/projects/{slug}",
                 "/api/v1/locations/provinces",
@@ -50,7 +53,10 @@ class OpenApiContractIntegrationTest {
         }
 
         assertOperations(result, "get", new String[] {
-                "/api/v1/users/me", "/api/v1/listings", "/api/v1/listings/{publicCode}",
+                "/api/v1/users/me", "/api/v1/payments/sepay/seller-upgrade",
+                "/api/v1/payments/sepay/seller-upgrade/offer",
+                "/api/v1/payments/sepay/seller-upgrade/{orderCode}",
+                "/api/v1/listings", "/api/v1/listings/{publicCode}",
                 "/api/v1/projects", "/api/v1/projects/{slug}",
                 "/api/v1/locations/provinces", "/api/v1/locations/provinces/{provinceId}/districts",
                 "/api/v1/locations/districts/{districtId}/wards", "/api/v1/seller/listings",
@@ -61,7 +67,8 @@ class OpenApiContractIntegrationTest {
         });
         assertOperations(result, "post", new String[] {
                 "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh",
-                "/api/v1/auth/logout", "/api/v1/users/me/upgrade-seller", "/api/v1/seller/listings",
+                "/api/v1/auth/logout", "/api/v1/payments/sepay/seller-upgrade",
+                "/api/v1/payments/sepay/ipn", "/api/v1/seller/listings",
                 "/api/v1/seller/listings/{id}/submit", "/api/v1/seller/listings/{id}/deactivate",
                 "/api/v1/seller/listings/{id}/images", "/api/v1/saved-listings/{listingId}",
                 "/api/v1/admin/listings/{id}/approve", "/api/v1/admin/listings/{id}/reject",

@@ -3,7 +3,6 @@ package com.batdongsan.service;
 import com.batdongsan.dto.UserProfileReq;
 import com.batdongsan.dto.UserProfileRes;
 import com.batdongsan.entity.User;
-import com.batdongsan.entity.UserRole;
 import com.batdongsan.entity.UserStatus;
 import com.batdongsan.exception.BadRequestException;
 import com.batdongsan.exception.ResourceNotFoundException;
@@ -34,16 +33,6 @@ public class UserService {
         user.setPhone(req.getPhone() == null || req.getPhone().isBlank()
                 ? null
                 : req.getPhone().trim());
-        return new UserProfileRes(userRepository.save(user));
-    }
-
-    @Transactional
-    public UserProfileRes upgradeToSeller(String email) {
-        User user = findActiveUser(email);
-        if (user.getRole() != UserRole.USER) {
-            throw new BadRequestException("Chỉ tài khoản USER mới có thể nâng cấp thành SELLER.");
-        }
-        user.setRole(UserRole.SELLER);
         return new UserProfileRes(userRepository.save(user));
     }
 

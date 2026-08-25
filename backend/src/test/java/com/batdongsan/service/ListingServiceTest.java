@@ -3,13 +3,16 @@ package com.batdongsan.service;
 import com.batdongsan.dto.ListingReq;
 import com.batdongsan.entity.*;
 import com.batdongsan.exception.ConflictException;
+import com.batdongsan.exception.BadRequestException;
 import com.batdongsan.exception.ForbiddenException;
 import com.batdongsan.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -30,6 +33,8 @@ class ListingServiceTest {
     @Mock UserRepository userRepository;
     @Mock SavedListingRepository savedListingRepository;
     @Mock ListingStatusHistoryRepository historyRepository;
+    @Mock ApplicationEventPublisher eventPublisher;
+    @Mock NotificationService notificationService;
 
     private ListingService service;
     private User owner;
@@ -39,7 +44,8 @@ class ListingServiceTest {
     @BeforeEach
     void setUp() {
         service = new ListingService(listingRepository, categoryRepository, districtRepository,
-                wardRepository, projectRepository, userRepository, savedListingRepository, historyRepository);
+                wardRepository, projectRepository, userRepository, savedListingRepository, historyRepository,
+                eventPublisher, notificationService);
         owner = user(1L, "owner@example.com");
         category = new Category(); category.setId(2L); category.setName("Nhà");
         Province province = new Province(); province.setId(3L); province.setName("TP.HCM");
@@ -102,6 +108,82 @@ class ListingServiceTest {
         assertEquals(ListingStatus.PENDING, listing.getStatus());
         verify(historyRepository).save(argThat(h -> h.getFromStatus() == ListingStatus.ACTIVE
                 && h.getToStatus() == ListingStatus.PENDING));
+    }
+
+    @Test
+    void editingExpiredListingCreatesANewDraft() {
+        Listing listing = listing(ListingStatus.EXPIRED);
+        listing.setExpiresAt(LocalDateTime.now().minusDays(1));
+        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        stubReferences();
+        when(listingRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.updateListing(10L, owner.getEmail(), request(0L));
+
+        assertEquals(ListingStatus.DRAFT, listing.getStatus());
+        assertNull(listing.getExpiresAt());
+        verify(historyRepository).save(argThat(h -> h.getFromStatus() == ListingStatus.EXPIRED
+                && h.getToStatus() == ListingStatus.DRAFT));
+    }
+
+    @Test
+    void inactiveListingCanBeSubmittedAgain() {
+        Listing listing = listing(ListingStatus.INACTIVE);
+        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.saveAndFlush(listing)).thenReturn(listing);
+
+        service.submitListing(10L, owner.getEmail());
+
+        assertEquals(ListingStatus.PENDING, listing.getStatus());
+    }
+
+    @Test
+    void activeAndPendingListingsCannotBeDeleted() {
+        Listing active = listing(ListingStatus.ACTIVE);
+        Listing pending = listing(ListingStatus.PENDING);
+        when(listingRepository.findById(10L)).thenReturn(Optional.of(active), Optional.of(pending));
+
+        assertThrows(BadRequestException.class,
+                () -> service.deleteListing(10L, owner.getEmail()));
+        assertThrows(BadRequestException.class,
+                () -> service.deleteListing(10L, owner.getEmail()));
+        verify(listingRepository, never()).delete(any(Listing.class));
+    }
+
+    @Test
+    void deletingListingPublishesItsStorageKeysForAfterCommitCleanup() {
+        Listing listing = listing(ListingStatus.DRAFT);
+        ListingImage first = new ListingImage(); first.setStorageKey("first.jpg");
+        ListingImage second = new ListingImage(); second.setStorageKey("second.webp");
+        listing.setImages(List.of(first, second));
+        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+
+        service.deleteListing(10L, owner.getEmail());
+
+        verify(listingRepository).delete(listing);
+        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        ListingFilesDeletedEvent deleted = assertInstanceOf(ListingFilesDeletedEvent.class, eventCaptor.getValue());
+        assertEquals(List.of("first.jpg", "second.webp"), deleted.storageKeys());
+    }
+
+    @Test
+    void listingProjectMustBelongToSelectedDistrict() {
+        Listing listing = listing(ListingStatus.DRAFT);
+        ListingReq request = request(0L);
+        request.setProjectId(20L);
+        Province province = district.getProvince();
+        District anotherDistrict = new District(); anotherDistrict.setId(99L); anotherDistrict.setProvince(province);
+        Project project = new Project(); project.setId(20L); project.setDistrict(anotherDistrict);
+        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        stubReferences();
+        when(projectRepository.findById(20L)).thenReturn(Optional.of(project));
+
+        BadRequestException error = assertThrows(BadRequestException.class,
+                () -> service.updateListing(10L, owner.getEmail(), request));
+
+        assertEquals("Dự án không thuộc quận/huyện đã chọn.", error.getMessage());
+        verify(listingRepository, never()).saveAndFlush(any());
     }
 
     @Test

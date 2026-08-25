@@ -3,6 +3,8 @@ target/
 *.class
 *.jar
 .gradle/
+.m2-repository/
+.test-tmp/
 build/
 .idea/
 .vscode/
