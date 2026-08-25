@@ -158,9 +158,15 @@ public class AiQuotaService {
     }
 
     private AiDailyUsage lockedUsage(User user, LocalDate date, LocalDateTime now) {
-        usages.insertIfAbsent(user.getId(), date, now);
         return usages.findForUpdate(user.getId(), date)
-                .orElseThrow(() -> new IllegalStateException("AI daily usage row was not created"));
+                .orElseGet(() -> {
+                    AiDailyUsage usage = new AiDailyUsage();
+                    usage.setUser(user);
+                    usage.setBusinessDate(date);
+                    usage.setCreatedAt(now);
+                    usage.setUpdatedAt(now);
+                    return usages.saveAndFlush(usage);
+                });
     }
 
     private LockedReservation lockReservation(String token) {

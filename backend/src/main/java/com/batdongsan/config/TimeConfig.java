@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
 import java.time.ZoneId;
-import java.util.TimeZone;
 
 @Configuration
 public class TimeConfig {
@@ -14,7 +13,6 @@ public class TimeConfig {
 
     public TimeConfig(@Value("${app.business-zone:Asia/Ho_Chi_Minh}") String businessZone) {
         this.businessZone = ZoneId.of(businessZone);
-        TimeZone.setDefault(TimeZone.getTimeZone(this.businessZone));
     }
 
     @Bean
