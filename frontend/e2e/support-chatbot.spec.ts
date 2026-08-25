@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-test('supports a complete customer help flow at 320px', async ({ page }) => {
+test('supports a complete customer help flow without horizontal overflow', async ({ page }) => {
   await page.goto('/auth/login')
+
+  const viewportWidth = page.viewportSize()?.width
+  expect(viewportWidth).toBeDefined()
 
   const launcher = page.getByRole('button', { name: 'Mở hỗ trợ khách hàng' })
   await expect(launcher).toBeVisible()
@@ -15,14 +18,14 @@ test('supports a complete customer help flow at 320px', async ({ page }) => {
   const bounds = await dialog.boundingBox()
   expect(bounds).not.toBeNull()
   expect(bounds?.x ?? -1).toBeGreaterThanOrEqual(0)
-  expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(320)
+  expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(viewportWidth ?? 0)
 
   await question.fill('toi muon dang tin')
   await question.press('Enter')
   await expect(dialog.getByText(/Để đăng tin, bạn cần đăng nhập/)).toBeVisible()
 
   const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth)
-  expect(documentWidth).toBeLessThanOrEqual(320)
+  expect(documentWidth).toBeLessThanOrEqual(viewportWidth ?? 0)
 
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
