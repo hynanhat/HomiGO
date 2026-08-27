@@ -42,6 +42,7 @@ services:
       FILE_UPLOAD_DIR: /app/uploads
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
       AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-Strict}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://homigo.io.vn}
       SEPAY_MERCHANT_ID: ${SEPAY_MERCHANT_ID:-}
       SEPAY_SECRET_KEY: ${SEPAY_SECRET_KEY:-}
       SEPAY_ENVIRONMENT: ${SEPAY_ENVIRONMENT:-sandbox}
@@ -73,7 +74,7 @@ services:
     build: ./frontend
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-80}:80"
+      - "127.0.0.1:${HTTP_PORT:-8080}:80"
     depends_on:
       backend:
         condition: service_healthy
