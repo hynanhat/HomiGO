@@ -19,6 +19,9 @@ describe('RecommendationSection', () => {
     expect(screen.getByRole('heading', { name: 'Bất động sản dành cho bạn' })).toBeInTheDocument()
     expect(await screen.findByText('Căn hộ ven sông cùng khu vực')).toBeInTheDocument()
     expect(screen.getAllByText('Cùng loại bất động sản').length).toBeGreaterThan(0)
-    expect(screen.getByRole('link', { name: /Căn hộ ven sông cùng khu vực/ })).toHaveAttribute('href', '/listings/HMG-2026-000102')
+    expect(screen.getByRole('link', { name: /Căn hộ ven sông cùng khu vực/ })).toHaveAttribute(
+      'href',
+      '/listings/HMG-2026-000102',
+    )
   })
 })

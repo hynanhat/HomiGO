@@ -9,7 +9,21 @@ import RegisterPage from '@/pages/RegisterPage'
 
 function renderAccount(entry: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={client}><AuthProvider><ToastProvider><MemoryRouter initialEntries={[entry]}><Routes><Route path="/auth/login" element={<LoginPage />} /><Route path="/auth/register" element={<RegisterPage />} /><Route path="/" element={<h1>Trang chủ</h1>} /></Routes></MemoryRouter></ToastProvider></AuthProvider></QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={client}>
+      <AuthProvider>
+        <ToastProvider>
+          <MemoryRouter initialEntries={[entry]}>
+            <Routes>
+              <Route path="/auth/login" element={<LoginPage />} />
+              <Route path="/auth/register" element={<RegisterPage />} />
+              <Route path="/" element={<h1>Trang chủ</h1>} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </AuthProvider>
+    </QueryClientProvider>,
+  )
 }
 
 describe('account pages', () => {
@@ -18,7 +32,9 @@ describe('account pages', () => {
     fireEvent.change(screen.getByLabelText(/Họ và tên/), { target: { value: 'Nguyễn An' } })
     fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'an@test.vn' } })
     fireEvent.change(screen.getByLabelText(/^Mật khẩu/), { target: { value: 'correct-horse' } })
-    fireEvent.change(screen.getByLabelText(/Xác nhận mật khẩu/), { target: { value: 'different-passphrase' } })
+    fireEvent.change(screen.getByLabelText(/Xác nhận mật khẩu/), {
+      target: { value: 'different-passphrase' },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Đăng ký' }))
     expect(await screen.findByText('Mật khẩu xác nhận không khớp.')).toBeInTheDocument()
   })

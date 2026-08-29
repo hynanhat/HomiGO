@@ -6,13 +6,35 @@ import { getListing, searchListings } from './listingApi'
 
 describe('listing API', () => {
   it('sends search parameters and unwraps PageResponse', async () => {
-    server.use(http.get('*/api/v1/listings', ({ request }) => {
-      const url = new URL(request.url)
-      expect(url.searchParams.get('transactionType')).toBe('RENT')
-      expect(url.searchParams.get('page')).toBe('1')
-      return HttpResponse.json({ success: true, message: 'OK', errorCode: null, data: { content: [], number: 1, size: 12, totalElements: 0, totalPages: 0, numberOfElements: 0, first: false, last: true, empty: true } })
-    }))
-    const page = await searchListings({ transactionType: 'RENT', sort: 'newest', page: 1, size: 12 })
+    server.use(
+      http.get('*/api/v1/listings', ({ request }) => {
+        const url = new URL(request.url)
+        expect(url.searchParams.get('transactionType')).toBe('RENT')
+        expect(url.searchParams.get('page')).toBe('1')
+        return HttpResponse.json({
+          success: true,
+          message: 'OK',
+          errorCode: null,
+          data: {
+            content: [],
+            number: 1,
+            size: 12,
+            totalElements: 0,
+            totalPages: 0,
+            numberOfElements: 0,
+            first: false,
+            last: true,
+            empty: true,
+          },
+        })
+      }),
+    )
+    const page = await searchListings({
+      transactionType: 'RENT',
+      sort: 'newest',
+      page: 1,
+      size: 12,
+    })
     expect(page.number).toBe(1)
     expect(page.empty).toBe(true)
   })
@@ -23,8 +45,13 @@ describe('listing API', () => {
   })
 
   it('surfaces safe 404 and network errors', async () => {
-    await expect(getListing('missing')).rejects.toMatchObject({ status: 404, errorCode: 'RESOURCE_NOT_FOUND' })
+    await expect(getListing('missing')).rejects.toMatchObject({
+      status: 404,
+      errorCode: 'RESOURCE_NOT_FOUND',
+    })
     server.use(http.get('*/api/v1/listings', () => HttpResponse.error()))
-    await expect(searchListings({ sort: 'newest', page: 0, size: 12 })).rejects.toBeInstanceOf(ApiError)
+    await expect(searchListings({ sort: 'newest', page: 0, size: 12 })).rejects.toBeInstanceOf(
+      ApiError,
+    )
   })
 })

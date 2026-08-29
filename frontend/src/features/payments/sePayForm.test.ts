@@ -34,12 +34,15 @@ describe('submitSePayCheckout', () => {
     expect(submit).toHaveBeenCalledOnce()
     expect(form.method).toBe('post')
     expect(form.action).toBe(checkout.checkoutUrl)
-    expect((form.elements.namedItem('order_invoice_number') as HTMLInputElement).value).toBe('HMG-SEPAY-TEST')
+    expect((form.elements.namedItem('order_invoice_number') as HTMLInputElement).value).toBe(
+      'HMG-SEPAY-TEST',
+    )
     expect((form.elements.namedItem('signature') as HTMLInputElement).value).toBe('signed')
   })
 
   it('refuses a non-HTTPS checkout endpoint', () => {
-    expect(() => submitSePayCheckout({ ...checkout, checkoutUrl: 'http://untrusted.example/checkout' }))
-      .toThrow('HTTPS')
+    expect(() =>
+      submitSePayCheckout({ ...checkout, checkoutUrl: 'http://untrusted.example/checkout' }),
+    ).toThrow('HTTPS')
   })
 })

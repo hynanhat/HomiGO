@@ -38,7 +38,13 @@ function RoleRoute({ role, children }: PropsWithChildren<{ role: UserRole }>) {
   const location = useLocation()
   if (status === 'restoring') return <RestoringSession />
   if (status !== 'authenticated') {
-    return <Navigate to="/auth/login" replace state={{ from: `${location.pathname}${location.search}` }} />
+    return (
+      <Navigate
+        to="/auth/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    )
   }
   if (user?.role !== role) return <Navigate to="/access-denied" replace />
   return <GuardOutlet>{children}</GuardOutlet>
@@ -49,7 +55,13 @@ export function SellerRoute({ children }: PropsWithChildren) {
   const location = useLocation()
   if (status === 'restoring') return <RestoringSession />
   if (status !== 'authenticated') {
-    return <Navigate to="/auth/login" replace state={{ from: `${location.pathname}${location.search}` }} />
+    return (
+      <Navigate
+        to="/auth/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    )
   }
   if (user?.role === 'USER') return <Navigate to="/seller/upgrade" replace />
   if (user?.role !== 'SELLER') return <Navigate to="/" replace state={{ accessDenied: true }} />

@@ -1,19 +1,33 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const emptyPage = { content: [], number: 0, size: 12, totalElements: 0, totalPages: 0, numberOfElements: 0, first: true, last: true, empty: true }
+const emptyPage = {
+  content: [],
+  number: 0,
+  size: 12,
+  totalElements: 0,
+  totalPages: 0,
+  numberOfElements: 0,
+  first: true,
+  last: true,
+  empty: true,
+}
 async function mockEmpty(page: Page) {
   await page.route('**/api/v1/**', (route) => {
     const anonymous = new URL(route.request().url()).pathname.endsWith('/auth/refresh')
     return route.fulfill({
       status: anonymous ? 401 : 200,
       contentType: 'application/json',
-      body: JSON.stringify(anonymous
-        ? { success: false, data: null, message: 'Anonymous', errorCode: 'UNAUTHORIZED' }
-        : { success: true, data: emptyPage, message: 'OK', errorCode: null }),
+      body: JSON.stringify(
+        anonymous
+          ? { success: false, data: null, message: 'Anonymous', errorCode: 'UNAUTHORIZED' }
+          : { success: true, data: emptyPage, message: 'OK', errorCode: null },
+      ),
     })
   })
 }
-test('keyboard order, focus return, headings, labels and errors are accessible', async ({ page }) => {
+test('keyboard order, focus return, headings, labels and errors are accessible', async ({
+  page,
+}) => {
   await mockEmpty(page)
   await page.goto('/auth/register')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tạo tài khoản')

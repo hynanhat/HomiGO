@@ -8,4 +8,7 @@ export interface PropertyRecommendation {
 }
 
 export const getRecommendations = (publicCode: string, size = 6) =>
-  apiClient.get<PropertyRecommendation[]>(`/listings/${encodeURIComponent(publicCode)}/recommendations`, { params: { size } })
+  apiClient.get<PropertyRecommendation[]>(
+    `/listings/${encodeURIComponent(publicCode)}/recommendations`,
+    { params: { size } },
+  )

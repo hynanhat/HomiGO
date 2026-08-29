@@ -18,11 +18,20 @@ const INITIAL_MESSAGES: readonly ChatMessage[] = [
 ]
 
 function MessageAction({ action }: { action: SupportAction }) {
-  const className = 'mt-2 inline-flex font-semibold text-brand-700 underline decoration-brand-500/40 underline-offset-4 hover:text-brand-600'
+  const className =
+    'mt-2 inline-flex font-semibold text-brand-700 underline decoration-brand-500/40 underline-offset-4 hover:text-brand-600'
   if (action.path.startsWith('/')) {
-    return <Link className={className} to={action.path}>{action.label}</Link>
+    return (
+      <Link className={className} to={action.path}>
+        {action.label}
+      </Link>
+    )
   }
-  return <a className={className} href={action.path}>{action.label}</a>
+  return (
+    <a className={className} href={action.path}>
+      {action.label}
+    </a>
+  )
 }
 
 export function SupportChatbot() {
@@ -98,9 +107,13 @@ export function SupportChatbot() {
         >
           <header className="support-chatbot-header">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="support-chatbot-avatar" aria-hidden="true"><Bot className="size-5" /></span>
+              <span className="support-chatbot-avatar" aria-hidden="true">
+                <Bot className="size-5" />
+              </span>
               <div className="min-w-0">
-                <h2 id="support-chatbot-title" className="font-bold text-white">Hỗ trợ khách hàng</h2>
+                <h2 id="support-chatbot-title" className="font-bold text-white">
+                  Hỗ trợ khách hàng
+                </h2>
                 <p className="text-xs text-brand-100">Trợ lý HomiGO</p>
               </div>
             </div>
@@ -115,11 +128,21 @@ export function SupportChatbot() {
             </Button>
           </header>
 
-          <div ref={logRef} className="support-chatbot-log" role="log" aria-label="Nội dung trò chuyện" aria-live="polite" aria-relevant="additions" aria-atomic="false">
+          <div
+            ref={logRef}
+            className="support-chatbot-log"
+            role="log"
+            aria-label="Nội dung trò chuyện"
+            aria-live="polite"
+            aria-relevant="additions"
+            aria-atomic="false"
+          >
             <ol className="grid gap-3">
               {messages.map((message) => (
                 <li key={message.id} className={`support-chatbot-message is-${message.sender}`}>
-                  <span className="sr-only">{message.sender === 'bot' ? 'Trợ lý HomiGO:' : 'Bạn:'}</span>
+                  <span className="sr-only">
+                    {message.sender === 'bot' ? 'Trợ lý HomiGO:' : 'Bạn:'}
+                  </span>
                   <p>{message.text}</p>
                   {message.action && <MessageAction action={message.action} />}
                 </li>
@@ -128,7 +151,9 @@ export function SupportChatbot() {
           </div>
 
           <div className="support-chatbot-suggestions" aria-label="Câu hỏi gợi ý">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-600">Bạn muốn hỏi về</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-600">
+              Bạn muốn hỏi về
+            </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {SUPPORT_TOPICS.map((topic) => (
                 <button
@@ -144,7 +169,9 @@ export function SupportChatbot() {
           </div>
 
           <form className="support-chatbot-composer" onSubmit={submitQuestion}>
-            <label className="sr-only" htmlFor="support-chatbot-question">Câu hỏi của bạn</label>
+            <label className="sr-only" htmlFor="support-chatbot-question">
+              Câu hỏi của bạn
+            </label>
             <div className="flex items-end gap-2">
               <input
                 ref={inputRef}
@@ -165,7 +192,15 @@ export function SupportChatbot() {
                 <Send className="size-5" aria-hidden="true" />
               </Button>
             </div>
-            {error && <p id="support-chatbot-error" className="mt-1 text-sm font-medium text-red-700" role="alert">{error}</p>}
+            {error && (
+              <p
+                id="support-chatbot-error"
+                className="mt-1 text-sm font-medium text-red-700"
+                role="alert"
+              >
+                {error}
+              </p>
+            )}
           </form>
         </section>
       )}

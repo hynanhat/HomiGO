@@ -47,19 +47,25 @@ export function ToastProvider({ children }: PropsWithChildren) {
     setToasts((current) => current.filter((toast) => toast.id !== id))
   }, [])
 
-  const showToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
-    const id = ++nextId.current
-    setToasts((current) => [...current, { ...toast, id }])
-    window.setTimeout(() => dismissToast(id), toast.duration ?? 4_500)
-    return id
-  }, [dismissToast])
+  const showToast = useCallback(
+    (toast: Omit<ToastMessage, 'id'>) => {
+      const id = ++nextId.current
+      setToasts((current) => [...current, { ...toast, id }])
+      window.setTimeout(() => dismissToast(id), toast.duration ?? 4_500)
+      return id
+    },
+    [dismissToast],
+  )
 
   const value = useMemo(() => ({ showToast, dismissToast }), [dismissToast, showToast])
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed right-4 top-4 z-[70] grid w-[min(24rem,calc(100vw-2rem))] gap-3" aria-label="Thông báo">
+      <div
+        className="fixed right-4 top-4 z-[70] grid w-[min(24rem,calc(100vw_-_2rem))] gap-3"
+        aria-label="Thông báo"
+      >
         {toasts.map((toast) => {
           const presentation = toastPresentation[toast.type]
           const Icon = presentation.icon
@@ -67,14 +73,21 @@ export function ToastProvider({ children }: PropsWithChildren) {
             <div
               key={toast.id}
               role={toast.type === 'error' ? 'alert' : 'status'}
-              className={`flex gap-3 rounded-xl border bg-white p-4 shadow-lg ${presentation.className}`}
+              className={`flex gap-3 rounded-2xl border bg-white/95 p-4 shadow-[var(--shadow-dialog)] backdrop-blur ${presentation.className}`}
             >
               <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{toast.title}</p>
-                {toast.description && <p className="mt-1 text-sm opacity-85">{toast.description}</p>}
+                {toast.description && (
+                  <p className="mt-1 text-sm opacity-85">{toast.description}</p>
+                )}
               </div>
-              <button type="button" className="self-start rounded p-1" aria-label="Đóng thông báo" onClick={() => dismissToast(toast.id)}>
+              <button
+                type="button"
+                className="grid size-11 shrink-0 place-items-center self-start rounded-xl transition hover:bg-slate-100"
+                aria-label="Đóng thông báo"
+                onClick={() => dismissToast(toast.id)}
+              >
                 <X className="size-4" aria-hidden="true" />
               </button>
             </div>
@@ -96,7 +109,7 @@ export function Skeleton({ className = '', ...props }: HTMLAttributes<HTMLDivEle
     <div
       role="status"
       aria-label="Đang tải nội dung"
-      className={`animate-pulse rounded-lg bg-slate-200 ${className}`}
+      className={`animate-pulse rounded-2xl bg-brand-100/80 ${className}`}
       {...props}
     />
   )
@@ -112,8 +125,10 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <section className="grid place-items-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-      <Inbox className="size-10 text-slate-400" aria-hidden="true" />
+    <section className="grid place-items-center rounded-3xl border border-dashed border-brand-300 bg-white/80 px-6 py-14 text-center shadow-[var(--shadow-card)] backdrop-blur">
+      <span className="grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-600">
+        <Inbox className="size-7" aria-hidden="true" />
+      </span>
       <h2 className="mt-4 text-lg font-bold text-ink-950">{title}</h2>
       <p className="mt-2 max-w-md text-sm text-ink-600">{description}</p>
       {action && <div className="mt-5">{action}</div>}
@@ -131,11 +146,18 @@ export function ErrorState({
   onRetry?: () => void
 }) {
   return (
-    <section className="grid place-items-center rounded-xl border border-red-200 bg-red-50 px-6 py-12 text-center" role="alert">
+    <section
+      className="grid place-items-center rounded-3xl border border-red-200 bg-red-50 px-6 py-14 text-center shadow-[var(--shadow-card)]"
+      role="alert"
+    >
       <TriangleAlert className="size-10 text-red-700" aria-hidden="true" />
       <h2 className="mt-4 text-lg font-bold text-red-950">{title}</h2>
       <p className="mt-2 max-w-md text-sm text-red-800">{description}</p>
-      {onRetry && <Button className="mt-5" variant="secondary" onClick={onRetry}>Thử lại</Button>}
+      {onRetry && (
+        <Button className="mt-5" variant="secondary" onClick={onRetry}>
+          Thử lại
+        </Button>
+      )}
     </section>
   )
 }

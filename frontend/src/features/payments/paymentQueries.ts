@@ -9,8 +9,10 @@ import {
 export const paymentKeys = {
   all: ['payments', 'sepay', 'seller-upgrade'] as const,
   offer: ['payments', 'sepay', 'seller-upgrade', 'offer'] as const,
-  detail: (orderCode: string) => ['payments', 'sepay', 'seller-upgrade', 'detail', orderCode] as const,
-  history: (page: number, size: number) => ['payments', 'sepay', 'seller-upgrade', 'history', page, size] as const,
+  detail: (orderCode: string) =>
+    ['payments', 'sepay', 'seller-upgrade', 'detail', orderCode] as const,
+  history: (page: number, size: number) =>
+    ['payments', 'sepay', 'seller-upgrade', 'history', page, size] as const,
 }
 
 export function useSellerUpgradeOffer() {
@@ -33,7 +35,7 @@ export function useSellerUpgradePayment(orderCode: string | null) {
     queryKey: paymentKeys.detail(orderCode ?? ''),
     queryFn: () => getSellerUpgradePayment(orderCode!),
     enabled: Boolean(orderCode),
-    refetchInterval: (query) => query.state.data?.status === 'PENDING' ? 2_000 : false,
+    refetchInterval: (query) => (query.state.data?.status === 'PENDING' ? 2_000 : false),
   })
 }
 

@@ -1,5 +1,10 @@
 import { apiClient } from '@/lib/api/client'
-import type { SePayCheckout, SellerUpgradeOffer, SellerUpgradePayment, SellerUpgradePaymentPage } from './paymentTypes'
+import type {
+  SePayCheckout,
+  SellerUpgradeOffer,
+  SellerUpgradePayment,
+  SellerUpgradePaymentPage,
+} from './paymentTypes'
 
 const basePath = '/payments/sepay/seller-upgrade'
 

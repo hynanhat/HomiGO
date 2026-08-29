@@ -8,18 +8,37 @@ html {
   min-width: 320px;
   color-scheme: light;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height) + 1rem);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--color-canvas);
+  background:
+    radial-gradient(circle at 6% 2%, rgb(153 246 228 / 0.42), transparent 27rem),
+    linear-gradient(180deg, #f8fffd 0%, var(--color-canvas) 48%, #f8fafc 100%);
   color: var(--color-ink-950);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 400;
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+p,
+li,
+dd {
+  overflow-wrap: break-word;
 }
 
 button,
@@ -31,12 +50,18 @@ textarea {
 
 button,
 a {
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
 }
 
 :focus-visible {
   outline: 2px solid var(--color-brand-600);
-  outline-offset: 3px;
+  outline-offset: 2px;
   box-shadow: var(--focus-ring);
 }
 
@@ -47,6 +72,42 @@ a {
 
 #root {
   min-height: 100vh;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.page-shell {
+  margin-inline: auto;
+  width: min(100% - 2rem, 80rem);
+}
+
+.glass-surface {
+  border: 1px solid rgb(255 255 255 / 0.66);
+  background: rgb(255 255 255 / 0.78);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(18px);
+}
+
+.eyebrow {
+  color: var(--color-brand-700);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  .page-shell {
+    width: min(100% - 3rem, 80rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-shell {
+    width: min(100% - 4rem, 80rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

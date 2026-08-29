@@ -39,7 +39,7 @@ export function NotificationBell() {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        className="relative grid size-10 place-items-center rounded-lg text-ink-800 transition hover:bg-slate-100"
+        className="relative grid size-11 place-items-center rounded-xl text-ink-800 transition hover:bg-brand-50"
         aria-label={`Thông báo${count ? `, ${count} chưa đọc` : ''}`}
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -55,7 +55,7 @@ export function NotificationBell() {
 
       {open && (
         <section className="notification-popover" role="dialog" aria-label="Thông báo mới">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-brand-100 bg-brand-50/60 px-4 py-3">
             <div>
               <h2 className="font-bold text-ink-950">Thông báo</h2>
               <p className="text-xs text-ink-600">{count} thông báo chưa đọc</p>
@@ -73,14 +73,20 @@ export function NotificationBell() {
           </div>
           <div className="max-h-80 overflow-y-auto">
             {listQuery.isLoading && <p className="p-4 text-sm text-ink-600">Đang tải thông báo…</p>}
-            {listQuery.isError && <p className="p-4 text-sm text-red-700">Không thể tải thông báo.</p>}
+            {listQuery.isError && (
+              <p className="p-4 text-sm text-red-700">Không thể tải thông báo.</p>
+            )}
             {listQuery.data?.content.map((notification) => {
               const target = notificationTarget(notification)
               const content = (
                 <>
                   <span className="block font-semibold text-ink-950">{notification.title}</span>
-                  <span className="mt-1 line-clamp-2 block text-sm text-ink-600">{notification.message}</span>
-                  <span className="mt-2 block text-xs text-ink-500">{formatDate(notification.createdAt)}</span>
+                  <span className="mt-1 line-clamp-2 block text-sm text-ink-600">
+                    {notification.message}
+                  </span>
+                  <span className="mt-2 block text-xs text-ink-500">
+                    {formatDate(notification.createdAt)}
+                  </span>
                 </>
               )
               return target ? (
@@ -106,9 +112,15 @@ export function NotificationBell() {
                 </button>
               )
             })}
-            {listQuery.data?.empty && <p className="p-6 text-center text-sm text-ink-600">Bạn đã đọc hết thông báo.</p>}
+            {listQuery.data?.empty && (
+              <p className="p-6 text-center text-sm text-ink-600">Bạn đã đọc hết thông báo.</p>
+            )}
           </div>
-          <Link className="block px-4 py-3 text-center text-sm font-semibold text-brand-700 hover:bg-slate-50" to="/notifications" onClick={() => setOpen(false)}>
+          <Link
+            className="block px-4 py-3 text-center text-sm font-semibold text-brand-700 hover:bg-slate-50"
+            to="/notifications"
+            onClick={() => setOpen(false)}
+          >
             Xem tất cả thông báo
           </Link>
         </section>

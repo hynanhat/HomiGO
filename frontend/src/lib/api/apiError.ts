@@ -32,10 +32,12 @@ export class ApiError extends Error {
 }
 
 function isFieldErrorMap(value: unknown): value is ApiFieldErrors {
-  return Boolean(value)
-    && typeof value === 'object'
-    && !Array.isArray(value)
-    && Object.values(value as Record<string, unknown>).every((item) => typeof item === 'string')
+  return (
+    Boolean(value) &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.values(value as Record<string, unknown>).every((item) => typeof item === 'string')
+  )
 }
 
 export function toApiError(error: unknown, fallbackMessage = DEFAULT_MESSAGE): ApiError {
@@ -60,7 +62,8 @@ export function toApiError(error: unknown, fallbackMessage = DEFAULT_MESSAGE): A
     errorCode: payload?.errorCode ?? null,
     fieldErrors: isFieldErrorMap(payload?.data) ? payload.data : {},
     isNetworkError,
-    retryable: isNetworkError || status === 408 || status === 429 || (status !== null && status >= 500),
+    retryable:
+      isNetworkError || status === 408 || status === 429 || (status !== null && status >= 500),
     cause: error,
   })
 }

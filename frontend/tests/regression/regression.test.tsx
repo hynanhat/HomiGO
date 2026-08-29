@@ -15,9 +15,9 @@ describe('frontend regression guardrails', () => {
   })
 
   it('normalizes reversed price, area and coordinate ranges from shared URLs', () => {
-    const state = parseListingSearchParams(new URLSearchParams(
-      'minPrice=500&maxPrice=100&minArea=90&maxArea=50&minLat=11&maxLat=10',
-    ))
+    const state = parseListingSearchParams(
+      new URLSearchParams('minPrice=500&maxPrice=100&minArea=90&maxArea=50&minLat=11&maxLat=10'),
+    )
     expect(state).toMatchObject({
       minPrice: 100,
       maxPrice: 500,
@@ -36,7 +36,9 @@ describe('frontend regression guardrails', () => {
 
   it('rejects unsupported, oversized and excess listing images', () => {
     const unsupported = new File(['text'], 'note.txt', { type: 'text/plain' })
-    const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.jpg', { type: 'image/jpeg' })
+    const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.jpg', {
+      type: 'image/jpeg',
+    })
     const valid = new File(['image'], 'home.webp', { type: 'image/webp' })
     const result = validateImageFiles([unsupported, oversized, valid], [])
     expect(result.valid).toEqual([valid])

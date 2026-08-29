@@ -2,15 +2,44 @@ import { expect, test, type Page } from '@playwright/test'
 
 const seller = { id: 7, name: 'Seller AI', email: 'seller-ai@homigo.test', role: 'SELLER' }
 const listing = {
-  id: 501, publicCode: 'HMG-AI-501', userId: 7, categoryId: 11, categoryName: 'Căn hộ',
-  districtId: 32, districtName: 'Quận 1', provinceName: 'TP. Hồ Chí Minh', wardId: null, wardName: null,
-  projectId: null, projectName: null, title: 'Căn hộ sáng thoáng', description: 'Mô tả thủ công hiện tại',
-  price: 3_200_000_000, area: 78, address: 'Nguyễn Huệ, Quận 1', bedrooms: 3, bathrooms: 2,
-  contactName: 'Seller AI', contactPhone: '0901234567', status: 'DRAFT', images: [],
-  createdAt: '2026-08-24T08:00:00', updatedAt: '2026-08-24T08:00:00', version: 0,
+  id: 501,
+  publicCode: 'HMG-AI-501',
+  userId: 7,
+  categoryId: 11,
+  categoryName: 'Căn hộ',
+  districtId: 32,
+  districtName: 'Quận 1',
+  provinceName: 'TP. Hồ Chí Minh',
+  wardId: null,
+  wardName: null,
+  projectId: null,
+  projectName: null,
+  title: 'Căn hộ sáng thoáng',
+  description: 'Mô tả thủ công hiện tại',
+  price: 3_200_000_000,
+  area: 78,
+  address: 'Nguyễn Huệ, Quận 1',
+  bedrooms: 3,
+  bathrooms: 2,
+  contactName: 'Seller AI',
+  contactPhone: '0901234567',
+  status: 'DRAFT',
+  images: [],
+  createdAt: '2026-08-24T08:00:00',
+  updatedAt: '2026-08-24T08:00:00',
+  version: 0,
 }
-const pageOf = (content: unknown[]) => ({ content, number: 0, size: 20, totalElements: content.length,
-  totalPages: content.length ? 1 : 0, numberOfElements: content.length, first: true, last: true, empty: !content.length })
+const pageOf = (content: unknown[]) => ({
+  content,
+  number: 0,
+  size: 20,
+  totalElements: content.length,
+  totalPages: content.length ? 1 : 0,
+  numberOfElements: content.length,
+  first: true,
+  last: true,
+  empty: !content.length,
+})
 
 async function mockApi(page: Page) {
   let successfulAttempts = 0
@@ -18,28 +47,56 @@ async function mockApi(page: Page) {
     const request = route.request()
     const path = new URL(request.url()).pathname
     let data: unknown = null
-    if (path.endsWith('/auth/refresh')) data = { accessToken: 'access', tokenType: 'Bearer', user: seller }
-    else if (path.endsWith('/categories')) data = pageOf([{ id: 11, name: 'Căn hộ', slug: 'can-ho', transactionType: 'BUY' }])
-    else if (path.endsWith('/locations/provinces')) data = pageOf([{ id: 21, name: 'TP. Hồ Chí Minh' }])
-    else if (path.includes('/provinces/21/districts')) data = pageOf([{ id: 32, provinceId: 21, name: 'Quận 1' }])
+    if (path.endsWith('/auth/refresh'))
+      data = { accessToken: 'access', tokenType: 'Bearer', user: seller }
+    else if (path.endsWith('/categories'))
+      data = pageOf([{ id: 11, name: 'Căn hộ', slug: 'can-ho', transactionType: 'BUY' }])
+    else if (path.endsWith('/locations/provinces'))
+      data = pageOf([{ id: 21, name: 'TP. Hồ Chí Minh' }])
+    else if (path.includes('/provinces/21/districts'))
+      data = pageOf([{ id: 32, provinceId: 21, name: 'Quận 1' }])
     else if (path.includes('/districts/32/wards')) data = pageOf([])
     else if (path.endsWith('/projects')) data = pageOf([])
-    else if (path.endsWith('/seller/ai-description/quota')) data = { enabled: true, limit: 5,
-      successfulAttempts, remainingAttempts: 5 - successfulAttempts, availableNow: 5 - successfulAttempts,
-      resetAt: '2026-08-25T00:00:00+07:00', retryAt: null }
+    else if (path.endsWith('/seller/ai-description/quota'))
+      data = {
+        enabled: true,
+        limit: 5,
+        successfulAttempts,
+        remainingAttempts: 5 - successfulAttempts,
+        availableNow: 5 - successfulAttempts,
+        resetAt: '2026-08-25T00:00:00+07:00',
+        retryAt: null,
+      }
     else if (path.endsWith('/seller/ai-description/drafts')) {
       const body = request.postDataJSON()
-      expect(body).toMatchObject({ keywords: 'ban công thoáng', categoryId: 11, districtId: 32,
-        price: 3_200_000_000, area: 78 })
+      expect(body).toMatchObject({
+        keywords: 'ban công thoáng',
+        categoryId: 11,
+        districtId: 32,
+        price: 3_200_000_000,
+        area: 78,
+      })
       expect(body.contactPhone).toBeUndefined()
       expect(body.latitude).toBeUndefined()
       successfulAttempts += 1
-      data = { description: `Bản mô tả AI lần ${successfulAttempts}`, quota: { enabled: true, limit: 5,
-        successfulAttempts, remainingAttempts: 5 - successfulAttempts, availableNow: 5 - successfulAttempts,
-        resetAt: '2026-08-25T00:00:00+07:00', retryAt: null } }
+      data = {
+        description: `Bản mô tả AI lần ${successfulAttempts}`,
+        quota: {
+          enabled: true,
+          limit: 5,
+          successfulAttempts,
+          remainingAttempts: 5 - successfulAttempts,
+          availableNow: 5 - successfulAttempts,
+          resetAt: '2026-08-25T00:00:00+07:00',
+          retryAt: null,
+        },
+      }
     } else if (path.endsWith('/seller/listings/501')) data = listing
-    await route.fulfill({ status: 200, contentType: 'application/json',
-      body: JSON.stringify({ success: true, data, message: 'OK', errorCode: null }) })
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data, message: 'OK', errorCode: null }),
+    })
   })
 }
 

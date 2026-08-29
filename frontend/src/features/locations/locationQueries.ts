@@ -11,27 +11,43 @@ export const locationKeys = {
 }
 
 export function useProvinces() {
-  return useQuery(queryOptions({
-    queryKey: locationKeys.provinces(),
-    queryFn: () => apiClient.get<PageResponse<ProvinceOption>>('/locations/provinces', { params: { size: 100 } }),
-    staleTime: 10 * 60_000,
-  }))
+  return useQuery(
+    queryOptions({
+      queryKey: locationKeys.provinces(),
+      queryFn: () =>
+        apiClient.get<PageResponse<ProvinceOption>>('/locations/provinces', {
+          params: { size: 100 },
+        }),
+      staleTime: 10 * 60_000,
+    }),
+  )
 }
 
 export function useDistricts(provinceId?: number) {
-  return useQuery(queryOptions({
-    queryKey: locationKeys.districts(provinceId),
-    queryFn: () => apiClient.get<PageResponse<DistrictOption>>(`/locations/provinces/${provinceId}/districts`, { params: { size: 100 } }),
-    enabled: Boolean(provinceId),
-    staleTime: 10 * 60_000,
-  }))
+  return useQuery(
+    queryOptions({
+      queryKey: locationKeys.districts(provinceId),
+      queryFn: () =>
+        apiClient.get<PageResponse<DistrictOption>>(
+          `/locations/provinces/${provinceId}/districts`,
+          { params: { size: 100 } },
+        ),
+      enabled: Boolean(provinceId),
+      staleTime: 10 * 60_000,
+    }),
+  )
 }
 
 export function useWards(districtId?: number) {
-  return useQuery(queryOptions({
-    queryKey: locationKeys.wards(districtId),
-    queryFn: () => apiClient.get<PageResponse<WardOption>>(`/locations/districts/${districtId}/wards`, { params: { size: 100 } }),
-    enabled: Boolean(districtId),
-    staleTime: 10 * 60_000,
-  }))
+  return useQuery(
+    queryOptions({
+      queryKey: locationKeys.wards(districtId),
+      queryFn: () =>
+        apiClient.get<PageResponse<WardOption>>(`/locations/districts/${districtId}/wards`, {
+          params: { size: 100 },
+        }),
+      enabled: Boolean(districtId),
+      staleTime: 10 * 60_000,
+    }),
+  )
 }

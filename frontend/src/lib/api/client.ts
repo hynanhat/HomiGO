@@ -52,7 +52,12 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => {
     const payload = response.data as Partial<ApiResponse<unknown>> | undefined
-    if (payload && typeof payload === 'object' && typeof payload.success === 'boolean' && 'data' in payload) {
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      typeof payload.success === 'boolean' &&
+      'data' in payload
+    ) {
       if (!payload.success) {
         throw new ApiError({
           message: payload.message || 'Yêu cầu không thành công.',
@@ -68,11 +73,12 @@ axiosInstance.interceptors.response.use(
     if (!axios.isAxiosError(error)) return Promise.reject(toApiError(error))
 
     const originalRequest = error.config as RetryableRequestConfig | undefined
-    const isRefreshable = error.response?.status === 401
-      && Boolean(originalRequest)
-      && !originalRequest?._homigoRetried
-      && !authPaths.some((path) => originalRequest?.url?.includes(path))
-      && Boolean(authController)
+    const isRefreshable =
+      error.response?.status === 401 &&
+      Boolean(originalRequest) &&
+      !originalRequest?._homigoRetried &&
+      !authPaths.some((path) => originalRequest?.url?.includes(path)) &&
+      Boolean(authController)
 
     if (!isRefreshable || !originalRequest || !authController) {
       return Promise.reject(toApiError(error))

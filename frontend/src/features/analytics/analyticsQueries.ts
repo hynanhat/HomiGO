@@ -3,8 +3,10 @@ import { getAdminListingStatistics, getSellerListingStatistics } from './analyti
 
 export const analyticsKeys = {
   all: ['listing-analytics'] as const,
-  seller: (listingId: number, days: number) => ['listing-analytics', 'seller', listingId, days] as const,
-  admin: (listingId: number, days: number) => ['listing-analytics', 'admin', listingId, days] as const,
+  seller: (listingId: number, days: number) =>
+    ['listing-analytics', 'seller', listingId, days] as const,
+  admin: (listingId: number, days: number) =>
+    ['listing-analytics', 'admin', listingId, days] as const,
 }
 
 export function useSellerListingStatistics(listingId: number, days: number) {

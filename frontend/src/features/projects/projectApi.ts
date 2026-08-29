@@ -7,5 +7,7 @@ export function searchProjects(params: ProjectSearchState): Promise<PageResponse
 }
 
 export function getProject(slug: string, page = 0, size = 12): Promise<ProjectDetail> {
-  return apiClient.get<ProjectDetail>(`/projects/${encodeURIComponent(slug)}`, { params: { page, size } })
+  return apiClient.get<ProjectDetail>(`/projects/${encodeURIComponent(slug)}`, {
+    params: { page, size },
+  })
 }

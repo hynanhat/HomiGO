@@ -7,13 +7,15 @@ import {
 } from './notificationApi'
 
 const configuredPollInterval = Number(import.meta.env.VITE_NOTIFICATION_POLL_INTERVAL_MS)
-export const notificationPollInterval = Number.isFinite(configuredPollInterval) && configuredPollInterval >= 5_000
-  ? configuredPollInterval
-  : 30_000
+export const notificationPollInterval =
+  Number.isFinite(configuredPollInterval) && configuredPollInterval >= 5_000
+    ? configuredPollInterval
+    : 30_000
 
 export const notificationKeys = {
   all: ['notifications'] as const,
-  page: (page: number, size: number, unreadOnly: boolean) => ['notifications', 'page', page, size, unreadOnly] as const,
+  page: (page: number, size: number, unreadOnly: boolean) =>
+    ['notifications', 'page', page, size, unreadOnly] as const,
   unreadCount: ['notifications', 'unread-count'] as const,
 }
 

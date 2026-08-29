@@ -1,5 +1,9 @@
 import { apiClient } from '@/lib/api/client'
-import type { AiDescriptionDraft, AiDescriptionQuota, AiDescriptionRequest } from './aiDescriptionTypes'
+import type {
+  AiDescriptionDraft,
+  AiDescriptionQuota,
+  AiDescriptionRequest,
+} from './aiDescriptionTypes'
 
 export const getAiDescriptionQuota = () =>
   apiClient.get<AiDescriptionQuota>('/seller/ai-description/quota')

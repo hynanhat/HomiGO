@@ -33,7 +33,10 @@ export interface AiDescriptionDraft {
   quota: AiDescriptionQuota
 }
 
-export function toAiDescriptionRequest(listing: ListingFormValues, keywords: string): AiDescriptionRequest {
+export function toAiDescriptionRequest(
+  listing: ListingFormValues,
+  keywords: string,
+): AiDescriptionRequest {
   return {
     keywords: keywords.trim(),
     categoryId: listing.categoryId,

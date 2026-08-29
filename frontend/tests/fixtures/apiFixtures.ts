@@ -17,7 +17,11 @@ export function buildApiResponse<T>(data: T, message = 'Thành công.'): ApiResp
   return { success: true, data, message, errorCode: null }
 }
 
-export function buildPage<T>(content: T[], page = 0, size = Math.max(content.length, 1)): PageResponse<T> {
+export function buildPage<T>(
+  content: T[],
+  page = 0,
+  size = Math.max(content.length, 1),
+): PageResponse<T> {
   const start = page * size
   const pageContent = content.slice(start, start + size)
   const totalPages = content.length === 0 ? 0 : Math.ceil(content.length / size)
@@ -104,7 +108,8 @@ export const projectFixtures: ProjectSummary[] = [
     wardId: 41,
     wardName: 'Phường Thảo Điền',
     address: '12 Nguyễn Văn Hưởng',
-    description: 'Dự án ven sông với không gian xanh, tiện ích đồng bộ và kết nối thuận tiện tới trung tâm.',
+    description:
+      'Dự án ven sông với không gian xanh, tiện ích đồng bộ và kết nối thuận tiện tới trung tâm.',
     latitude: 10.804,
     longitude: 106.732,
     status: 'IN_PROGRESS',
@@ -116,10 +121,15 @@ export const projectFixtures: ProjectSummary[] = [
 
 export const projectDetailFixture: ProjectDetail = {
   ...projectFixtures[0],
-  description: 'Dự án ven sông với không gian xanh, tiện ích đồng bộ và kết nối thuận tiện tới trung tâm.',
+  description:
+    'Dự án ven sông với không gian xanh, tiện ích đồng bộ và kết nối thuận tiện tới trung tâm.',
   latitude: 10.804,
   longitude: 106.732,
-  listings: buildPage(listingFixtures.filter((listing) => listing.status === 'ACTIVE'), 0, 12),
+  listings: buildPage(
+    listingFixtures.filter((listing) => listing.status === 'ACTIVE'),
+    0,
+    12,
+  ),
 }
 
 export const adminUserFixtures: AdminUser[] = [

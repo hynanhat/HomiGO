@@ -23,12 +23,10 @@ describe('findSupportTopic', () => {
     expect(findSupportTopic(question)?.id).toBe(expectedTopic)
   })
 
-  it.each([
-    'Hôm nay thời tiết thế nào?',
-    'tin nhà',
-    'đăng tin tài khoản',
-    'xin chào',
-  ])('returns null for low-confidence or ambiguous input: %s', (question) => {
-    expect(findSupportTopic(question)).toBeNull()
-  })
+  it.each(['Hôm nay thời tiết thế nào?', 'tin nhà', 'đăng tin tài khoản', 'xin chào'])(
+    'returns null for low-confidence or ambiguous input: %s',
+    (question) => {
+      expect(findSupportTopic(question)).toBeNull()
+    },
+  )
 })

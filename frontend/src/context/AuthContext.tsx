@@ -9,11 +9,7 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react'
-import {
-  configureApiAuth,
-  requestRefreshSession,
-  requestSessionLogout,
-} from '@/lib/api/client'
+import { configureApiAuth, requestRefreshSession, requestSessionLogout } from '@/lib/api/client'
 import {
   broadcastSessionLogout,
   clearPersistedSession,
@@ -130,15 +126,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     })
   }, [])
 
-  const value = useMemo<AuthContextValue>(() => ({
-    ...state,
-    token: state.accessToken,
-    isAuthenticated: state.status === 'authenticated',
-    login,
-    logout,
-    refresh,
-    updateUser,
-  }), [login, logout, refresh, state, updateUser])
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      ...state,
+      token: state.accessToken,
+      isAuthenticated: state.status === 'authenticated',
+      login,
+      logout,
+      refresh,
+      updateUser,
+    }),
+    [login, logout, refresh, state, updateUser],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -12,12 +12,23 @@ import { AuthProvider } from '@/context/AuthContext'
 
 function renderPage(node: React.ReactNode, entries = ['/']) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={client}><AuthProvider><MemoryRouter initialEntries={entries}>{node}</MemoryRouter></AuthProvider></QueryClientProvider>)
+  return render(
+    <QueryClientProvider client={client}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={entries}>{node}</MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
+  )
 }
 
 describe('public listing discovery', () => {
   it('searches from home using BUY/RENT and keyword', async () => {
-    renderPage(<Routes><Route path="/" element={<HomePage />} /><Route path="/listings" element={<p>Kết quả điều hướng</p>} /></Routes>)
+    renderPage(
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/listings" element={<p>Kết quả điều hướng</p>} />
+      </Routes>,
+    )
     fireEvent.click(screen.getByRole('button', { name: /Thuê/ }))
     fireEvent.change(screen.getByLabelText('Tìm bất động sản'), { target: { value: 'Thảo Điền' } })
     fireEvent.click(screen.getByRole('button', { name: /Tìm kiếm/ }))
@@ -26,10 +37,19 @@ describe('public listing discovery', () => {
 
   it('renders semantic card, gallery and sticky contact details', () => {
     const listing = listingFixtures[0]
-    renderPage(<><ListingCard listing={listing} /><ListingGallery listing={listing} /><ListingDetails listing={listing} /></>)
+    renderPage(
+      <>
+        <ListingCard listing={listing} />
+        <ListingGallery listing={listing} />
+        <ListingDetails listing={listing} />
+      </>,
+    )
     expect(screen.getAllByText(listing.title).length).toBeGreaterThan(0)
     expect(screen.getByText(`Mã tin: ${listing.publicCode}`)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: listing.contactPhone })).toHaveAttribute('href', `tel:${listing.contactPhone}`)
+    expect(screen.getByRole('link', { name: listing.contactPhone })).toHaveAttribute(
+      'href',
+      `tel:${listing.contactPhone}`,
+    )
   })
 
   it('shows URL filters, result count and mobile filter drawer', async () => {

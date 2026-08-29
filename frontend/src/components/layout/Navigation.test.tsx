@@ -5,7 +5,9 @@ import { useAuth } from '@/context/AuthContext'
 import { Navigation } from './Navigation'
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: vi.fn() }))
-vi.mock('@/features/notifications/components/NotificationBell', () => ({ NotificationBell: () => <span aria-label="Thông báo" /> }))
+vi.mock('@/features/notifications/components/NotificationBell', () => ({
+  NotificationBell: () => <span aria-label="Thông báo" />,
+}))
 
 const mockedUseAuth = vi.mocked(useAuth)
 const baseAuth = {
@@ -28,7 +30,11 @@ describe('Navigation role actions', () => {
       user: { id: 1, name: 'Admin HomiGO', email: 'admin@homigo.vn', role: 'ADMIN' },
     })
 
-    render(<MemoryRouter><Navigation /></MemoryRouter>)
+    render(
+      <MemoryRouter>
+        <Navigation />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByRole('link', { name: /Quản trị/ })).toHaveAttribute('href', '/admin')
     expect(screen.queryByRole('link', { name: 'Đăng tin' })).not.toBeInTheDocument()
@@ -41,9 +47,16 @@ describe('Navigation role actions', () => {
       user: { id: 2, name: 'Seller HomiGO', email: 'seller@homigo.vn', role: 'SELLER' },
     })
 
-    render(<MemoryRouter><Navigation /></MemoryRouter>)
+    render(
+      <MemoryRouter>
+        <Navigation />
+      </MemoryRouter>,
+    )
 
-    expect(screen.getByRole('link', { name: 'Đăng tin' })).toHaveAttribute('href', '/seller/listings/new')
+    expect(screen.getByRole('link', { name: 'Đăng tin' })).toHaveAttribute(
+      'href',
+      '/seller/listings/new',
+    )
     expect(screen.queryByRole('link', { name: /Quản trị/ })).not.toBeInTheDocument()
   })
 })

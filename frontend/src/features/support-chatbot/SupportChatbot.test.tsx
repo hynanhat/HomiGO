@@ -7,7 +7,11 @@ import { SUPPORT_TOPICS } from './chatbotKnowledge'
 import { SupportChatbot } from './SupportChatbot'
 
 function renderChatbot() {
-  return render(<MemoryRouter><SupportChatbot /></MemoryRouter>)
+  return render(
+    <MemoryRouter>
+      <SupportChatbot />
+    </MemoryRouter>,
+  )
 }
 
 describe('SupportChatbot suggestions', () => {
@@ -41,7 +45,10 @@ describe('SupportChatbot suggestions', () => {
       await user.click(screen.getByRole('button', { name: topic.label }))
       expect(within(log).getByText(topic.label)).toBeInTheDocument()
       expect(within(log).getByText(topic.answer)).toBeInTheDocument()
-      expect(within(log).getByRole('link', { name: topic.action.label })).toHaveAttribute('href', topic.action.path)
+      expect(within(log).getByRole('link', { name: topic.action.label })).toHaveAttribute(
+        'href',
+        topic.action.path,
+      )
     }
 
     const messages = within(log).getAllByRole('listitem')
@@ -91,7 +98,9 @@ describe('SupportChatbot typed questions', () => {
     await user.type(input, 'tìm căn hộ{Enter}')
     await user.type(input, 'đổi thông tin cá nhân{Enter}')
 
-    const messages = within(screen.getByRole('log', { name: 'Nội dung trò chuyện' })).getAllByRole('listitem')
+    const messages = within(screen.getByRole('log', { name: 'Nội dung trò chuyện' })).getAllByRole(
+      'listitem',
+    )
     expect(messages).toHaveLength(5)
     expect(messages[1]).toHaveTextContent('tìm căn hộ')
     expect(messages[3]).toHaveTextContent('đổi thông tin cá nhân')
@@ -104,11 +113,17 @@ describe('SupportChatbot fallback', () => {
     renderChatbot()
     await user.click(screen.getByRole('button', { name: 'Mở hỗ trợ khách hàng' }))
 
-    await user.type(screen.getByRole('textbox', { name: 'Câu hỏi của bạn' }), 'Hôm nay thời tiết thế nào?{Enter}')
+    await user.type(
+      screen.getByRole('textbox', { name: 'Câu hỏi của bạn' }),
+      'Hôm nay thời tiết thế nào?{Enter}',
+    )
 
     const log = screen.getByRole('log', { name: 'Nội dung trò chuyện' })
     expect(within(log).getByText(/Mình chưa hiểu rõ câu hỏi này/)).toBeInTheDocument()
-    expect(within(log).getByRole('link', { name: 'Gửi email hỗ trợ' })).toHaveAttribute('href', 'mailto:hotro@homigo.vn')
+    expect(within(log).getByRole('link', { name: 'Gửi email hỗ trợ' })).toHaveAttribute(
+      'href',
+      'mailto:hotro@homigo.vn',
+    )
   })
 })
 

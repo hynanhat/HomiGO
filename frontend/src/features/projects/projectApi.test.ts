@@ -5,10 +5,27 @@ import { getProject, searchProjects } from './projectApi'
 
 describe('project API', () => {
   it('passes filters and unwraps project pages', async () => {
-    server.use(http.get('*/api/v1/projects', ({ request }) => {
-      expect(new URL(request.url).searchParams.get('status')).toBe('IN_PROGRESS')
-      return HttpResponse.json({ success: true, message: 'OK', errorCode: null, data: { content: [], number: 0, size: 12, totalElements: 0, totalPages: 0, numberOfElements: 0, first: true, last: true, empty: true } })
-    }))
+    server.use(
+      http.get('*/api/v1/projects', ({ request }) => {
+        expect(new URL(request.url).searchParams.get('status')).toBe('IN_PROGRESS')
+        return HttpResponse.json({
+          success: true,
+          message: 'OK',
+          errorCode: null,
+          data: {
+            content: [],
+            number: 0,
+            size: 12,
+            totalElements: 0,
+            totalPages: 0,
+            numberOfElements: 0,
+            first: true,
+            last: true,
+            empty: true,
+          },
+        })
+      }),
+    )
     expect((await searchProjects({ status: 'IN_PROGRESS', page: 0, size: 12 })).empty).toBe(true)
   })
 

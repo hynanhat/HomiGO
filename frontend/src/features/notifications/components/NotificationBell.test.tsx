@@ -6,10 +6,14 @@ import { describe, expect, it } from 'vitest'
 import { NotificationBell } from './NotificationBell'
 
 function renderBell() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter><NotificationBell /></MemoryRouter>
+      <MemoryRouter>
+        <NotificationBell />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -24,6 +28,9 @@ describe('NotificationBell', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Thông báo mới' })).toBeInTheDocument()
     expect(screen.getByText('Tin đăng đã được duyệt')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Xem tất cả thông báo' })).toHaveAttribute('href', '/notifications')
+    expect(screen.getByRole('link', { name: 'Xem tất cả thông báo' })).toHaveAttribute(
+      'href',
+      '/notifications',
+    )
   })
 })

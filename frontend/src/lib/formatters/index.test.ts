@@ -19,12 +19,14 @@ describe('Vietnamese formatters', () => {
   })
 
   it('builds a compact address without empty or duplicate segments', () => {
-    expect(formatAddress({
-      address: '12 Nguyễn Huệ',
-      wardName: 'Bến Nghé',
-      districtName: 'Quận 1',
-      provinceName: 'TP.HCM',
-    })).toBe('12 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM')
+    expect(
+      formatAddress({
+        address: '12 Nguyễn Huệ',
+        wardName: 'Bến Nghé',
+        districtName: 'Quận 1',
+        provinceName: 'TP.HCM',
+      }),
+    ).toBe('12 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM')
     expect(formatAddress({ districtName: 'Quận 1', provinceName: 'Quận 1' })).toBe('Quận 1')
   })
 

@@ -4,11 +4,12 @@ import type { AiDescriptionRequest } from './aiDescriptionTypes'
 
 export const aiDescriptionQuotaKey = ['seller', 'ai-description', 'quota'] as const
 
-export const useAiDescriptionQuota = () => useQuery({
-  queryKey: aiDescriptionQuotaKey,
-  queryFn: getAiDescriptionQuota,
-  staleTime: 30_000,
-})
+export const useAiDescriptionQuota = () =>
+  useQuery({
+    queryKey: aiDescriptionQuotaKey,
+    queryFn: getAiDescriptionQuota,
+    staleTime: 30_000,
+  })
 
 export function useGenerateAiDescription() {
   const queryClient = useQueryClient()

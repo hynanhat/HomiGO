@@ -2,15 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { describe, expect, it, vi } from 'vitest'
-import {
-  Badge,
-  Button,
-  Input,
-  Modal,
-  Pagination,
-  Select,
-  Textarea,
-} from './index'
+import { Badge, Button, Input, Modal, Pagination, Select, Textarea } from './index'
 
 describe('UI primitives', () => {
   it('supports button activation and disabled state', async () => {

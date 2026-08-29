@@ -14,7 +14,8 @@ export default function SellerListingDetailPage() {
   const navigate = useNavigate()
 
   if (query.isPending) return <Skeleton className="h-96" />
-  if (query.isError || !query.data) return <ErrorState title="Không thể tải tin đăng" onRetry={() => query.refetch()} />
+  if (query.isError || !query.data)
+    return <ErrorState title="Không thể tải tin đăng" onRetry={() => query.refetch()} />
 
   const item = query.data
   return (
@@ -24,7 +25,9 @@ export default function SellerListingDetailPage() {
           <div>
             <Badge status={item.status} />
             <h2 className="mt-3 text-2xl font-bold">{item.title}</h2>
-            <p className="mt-2 text-ink-600">{item.publicCode} · Phiên bản {item.version}</p>
+            <p className="mt-2 text-ink-600">
+              {item.publicCode} · Phiên bản {item.version}
+            </p>
           </div>
           <ListingLifecycleActions
             listing={item}
@@ -38,10 +41,22 @@ export default function SellerListingDetailPage() {
           </p>
         )}
         <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div><dt className="text-sm text-ink-600">Giá</dt><dd className="font-bold">{formatCurrency(item.price)}</dd></div>
-          <div><dt className="text-sm text-ink-600">Địa chỉ</dt><dd className="font-bold">{formatAddress(item)}</dd></div>
-          <div><dt className="text-sm text-ink-600">Tạo lúc</dt><dd>{formatDate(item.createdAt)}</dd></div>
-          <div><dt className="text-sm text-ink-600">Cập nhật</dt><dd>{formatDate(item.updatedAt)}</dd></div>
+          <div>
+            <dt className="text-sm text-ink-600">Giá</dt>
+            <dd className="font-bold">{formatCurrency(item.price)}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-ink-600">Địa chỉ</dt>
+            <dd className="font-bold">{formatAddress(item)}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-ink-600">Tạo lúc</dt>
+            <dd>{formatDate(item.createdAt)}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-ink-600">Cập nhật</dt>
+            <dd>{formatDate(item.updatedAt)}</dd>
+          </div>
         </dl>
       </Card>
 
@@ -49,7 +64,11 @@ export default function SellerListingDetailPage() {
 
       <Card className="p-6">
         {canManageListingImages(item.status) ? (
-          <ListingImageUploader listingId={item.id} initialUrls={item.images} initialImageIds={item.imageIds} />
+          <ListingImageUploader
+            listingId={item.id}
+            initialUrls={item.images}
+            initialImageIds={item.imageIds}
+          />
         ) : (
           <div>
             <h2 className="text-xl font-bold">Hình ảnh đang được khóa</h2>

@@ -14,11 +14,13 @@ function axiosError(status?: number, data?: unknown): AxiosError {
 
 describe('ApiError', () => {
   it('preserves safe client messages and field errors', () => {
-    const error = toApiError(axiosError(400, {
-      message: 'Dữ liệu chưa hợp lệ.',
-      errorCode: 'VALIDATION_ERROR',
-      data: { email: 'Email không hợp lệ.' },
-    }))
+    const error = toApiError(
+      axiosError(400, {
+        message: 'Dữ liệu chưa hợp lệ.',
+        errorCode: 'VALIDATION_ERROR',
+        data: { email: 'Email không hợp lệ.' },
+      }),
+    )
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error.message).toBe('Dữ liệu chưa hợp lệ.')

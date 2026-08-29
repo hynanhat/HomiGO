@@ -6,7 +6,11 @@ import { ListingStatistics } from './ListingStatistics'
 describe('ListingStatistics', () => {
   it('renders totals and an accessible daily trend', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={client}><ListingStatistics listingId={101} /></QueryClientProvider>)
+    render(
+      <QueryClientProvider client={client}>
+        <ListingStatistics listingId={101} />
+      </QueryClientProvider>,
+    )
 
     expect(await screen.findByText('124')).toBeInTheDocument()
     expect(screen.getByText('7')).toBeInTheDocument()

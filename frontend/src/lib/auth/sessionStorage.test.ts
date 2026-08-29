@@ -24,7 +24,9 @@ describe('session persistence', () => {
 
     broadcastSessionLogout()
 
-    expect(window.localStorage.getItem(getSessionStorageKey())).toBe('00000000-0000-4000-8000-000000000001')
+    expect(window.localStorage.getItem(getSessionStorageKey())).toBe(
+      '00000000-0000-4000-8000-000000000001',
+    )
     expect(window.localStorage.getItem('homigo.session.v1')).toBeNull()
   })
 })

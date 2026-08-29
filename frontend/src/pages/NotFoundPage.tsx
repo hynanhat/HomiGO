@@ -11,7 +11,10 @@ export default function NotFoundPage() {
         <p className="mx-auto mt-4 max-w-lg text-ink-600">
           Đường dẫn có thể đã thay đổi hoặc nội dung không còn tồn tại.
         </p>
-        <Link className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white hover:bg-brand-700" to="/">
+        <Link
+          className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white hover:bg-brand-700"
+          to="/"
+        >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Về trang chủ
         </Link>

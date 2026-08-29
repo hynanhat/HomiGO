@@ -25,7 +25,14 @@ export function serializeProjectSearchState(state: ProjectSearchState): URLSearc
   return params
 }
 
-export function updateProjectFilters(state: ProjectSearchState, updates: Partial<ProjectSearchState>) {
-  const changed = Object.keys(updates).some((key) => key !== 'page' && state[key as keyof ProjectSearchState] !== updates[key as keyof ProjectSearchState])
-  return { ...state, ...updates, page: changed ? 0 : updates.page ?? state.page }
+export function updateProjectFilters(
+  state: ProjectSearchState,
+  updates: Partial<ProjectSearchState>,
+) {
+  const changed = Object.keys(updates).some(
+    (key) =>
+      key !== 'page' &&
+      state[key as keyof ProjectSearchState] !== updates[key as keyof ProjectSearchState],
+  )
+  return { ...state, ...updates, page: changed ? 0 : (updates.page ?? state.page) }
 }

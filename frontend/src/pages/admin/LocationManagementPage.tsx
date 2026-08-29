@@ -4,15 +4,186 @@ import { ErrorState, Skeleton, useToast } from '@/components/feedback'
 import { AdminDataTable } from '@/features/admin/components/AdminDataTable'
 import { DeleteConfirmation } from '@/features/admin/components/DeleteConfirmation'
 import { EntityFormDialog } from '@/features/admin/components/EntityFormDialog'
-import { createAdminLocation, deleteAdminLocation, updateAdminLocation, type AdminLocationKind, type AdminLocationRow } from '@/features/admin/adminApi'
+import {
+  createAdminLocation,
+  deleteAdminLocation,
+  updateAdminLocation,
+  type AdminLocationKind,
+  type AdminLocationRow,
+} from '@/features/admin/adminApi'
 import { useAdminLocations, useAdminMutation } from '@/features/admin/adminQueries'
 import { getSafeErrorMessage } from '@/lib/api/apiError'
 
-const tabs: Array<{ kind: AdminLocationKind; label: string }> = [{ kind: 'provinces', label: 'Tỉnh/thành' }, { kind: 'districts', label: 'Quận/huyện' }, { kind: 'wards', label: 'Phường/xã' }]
+const tabs: Array<{ kind: AdminLocationKind; label: string }> = [
+  { kind: 'provinces', label: 'Tỉnh/thành' },
+  { kind: 'districts', label: 'Quận/huyện' },
+  { kind: 'wards', label: 'Phường/xã' },
+]
 export default function LocationManagementPage() {
-  const [kind, setKind] = useState<AdminLocationKind>('provinces'); const [editing, setEditing] = useState<AdminLocationRow | null>(); const [deleting, setDeleting] = useState<AdminLocationRow>(); const [name, setName] = useState(''); const [parentId, setParentId] = useState(0); const [code, setCode] = useState(''); const query = useAdminLocations<AdminLocationRow>(kind); const { showToast } = useToast(); const save = useAdminMutation(async (value: { id?: number }) => { const request = kind === 'provinces' ? { name } : kind === 'districts' ? { name, provinceId: parentId } : { name, districtId: parentId, code }; return value.id ? updateAdminLocation(kind, value.id, request) : createAdminLocation(kind, request) }); const remove = useAdminMutation((id: number) => deleteAdminLocation(kind, id))
-  const open = (item: AdminLocationRow | null) => { setEditing(item); setName(item?.name ?? ''); setParentId(item && 'provinceId' in item ? item.provinceId : item && 'districtId' in item ? item.districtId : 0); setCode(item && 'code' in item ? item.code : '') }
-  const columns = [{ key: 'name', header: 'Tên địa giới', render: (item: AdminLocationRow) => <strong>{item.name}</strong> }, { key: 'parent', header: 'Mã cấp trên', render: (item: AdminLocationRow) => 'provinceId' in item ? item.provinceId : 'districtId' in item ? item.districtId : '—' }, { key: 'code', header: 'Mã', render: (item: AdminLocationRow) => 'code' in item ? item.code : '—' }, { key: 'actions', header: 'Thao tác', render: (item: AdminLocationRow) => <div className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => open(item)}>Sửa</Button><Button size="sm" variant="danger" onClick={() => setDeleting(item)}>Xóa</Button></div> }]
-  const submit = async () => { if (!name.trim() || (kind !== 'provinces' && parentId < 1) || (kind === 'wards' && !code.trim())) return; try { await save.mutateAsync({ id: editing?.id }); setEditing(undefined); showToast({ type: 'success', title: 'Đã lưu địa giới' }) } catch (error) { showToast({ type: 'error', title: 'Không thể lưu', description: getSafeErrorMessage(error) }) } }
-  return <div><div className="flex flex-wrap justify-between gap-4"><h2 className="text-3xl font-extrabold">Quản lý địa giới</h2><Button onClick={() => open(null)}>Thêm mới</Button></div><div className="mt-6 flex gap-2" role="tablist">{tabs.map((tab) => <Button key={tab.kind} role="tab" aria-selected={kind === tab.kind} variant={kind === tab.kind ? 'primary' : 'secondary'} onClick={() => { setKind(tab.kind); setEditing(undefined) }}>{tab.label}</Button>)}</div>{query.isPending && <Skeleton className="mt-6 h-72" />}{query.isError && <ErrorState onRetry={() => query.refetch()} />}{query.data && <div className="mt-6"><AdminDataTable caption="Danh sách địa giới" columns={columns} rows={query.data.content} rowKey={(item) => item.id} /></div>}<EntityFormDialog open={editing !== undefined} title={`${editing ? 'Sửa' : 'Thêm'} ${tabs.find((tab) => tab.kind === kind)?.label}`} submitting={save.isPending} onClose={() => setEditing(undefined)} onSubmit={submit}><Input label="Tên" required value={name} onChange={(event) => setName(event.target.value)} />{kind !== 'provinces' && <Input label={kind === 'districts' ? 'Mã tỉnh/thành' : 'Mã quận/huyện'} type="number" min="1" required value={parentId || ''} onChange={(event) => setParentId(Number(event.target.value))} />}{kind === 'wards' && <Input label="Mã phường/xã" required value={code} onChange={(event) => setCode(event.target.value)} />}</EntityFormDialog><DeleteConfirmation open={Boolean(deleting)} name={deleting?.name ?? ''} loading={remove.isPending} onClose={() => setDeleting(undefined)} onConfirm={async () => { if (!deleting) return; try { await remove.mutateAsync(deleting.id); setDeleting(undefined) } catch (error) { showToast({ type: 'error', title: 'Không thể xóa dữ liệu đang được sử dụng', description: getSafeErrorMessage(error) }) } }} /></div>
+  const [kind, setKind] = useState<AdminLocationKind>('provinces')
+  const [editing, setEditing] = useState<AdminLocationRow | null>()
+  const [deleting, setDeleting] = useState<AdminLocationRow>()
+  const [name, setName] = useState('')
+  const [parentId, setParentId] = useState(0)
+  const [code, setCode] = useState('')
+  const query = useAdminLocations<AdminLocationRow>(kind)
+  const { showToast } = useToast()
+  const save = useAdminMutation(async (value: { id?: number }) => {
+    const request =
+      kind === 'provinces'
+        ? { name }
+        : kind === 'districts'
+          ? { name, provinceId: parentId }
+          : { name, districtId: parentId, code }
+    return value.id
+      ? updateAdminLocation(kind, value.id, request)
+      : createAdminLocation(kind, request)
+  })
+  const remove = useAdminMutation((id: number) => deleteAdminLocation(kind, id))
+  const open = (item: AdminLocationRow | null) => {
+    setEditing(item)
+    setName(item?.name ?? '')
+    setParentId(
+      item && 'provinceId' in item
+        ? item.provinceId
+        : item && 'districtId' in item
+          ? item.districtId
+          : 0,
+    )
+    setCode(item && 'code' in item ? item.code : '')
+  }
+  const columns = [
+    {
+      key: 'name',
+      header: 'Tên địa giới',
+      render: (item: AdminLocationRow) => <strong>{item.name}</strong>,
+    },
+    {
+      key: 'parent',
+      header: 'Mã cấp trên',
+      render: (item: AdminLocationRow) =>
+        'provinceId' in item ? item.provinceId : 'districtId' in item ? item.districtId : '—',
+    },
+    {
+      key: 'code',
+      header: 'Mã',
+      render: (item: AdminLocationRow) => ('code' in item ? item.code : '—'),
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      render: (item: AdminLocationRow) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onClick={() => open(item)}>
+            Sửa
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => setDeleting(item)}>
+            Xóa
+          </Button>
+        </div>
+      ),
+    },
+  ]
+  const submit = async () => {
+    if (
+      !name.trim() ||
+      (kind !== 'provinces' && parentId < 1) ||
+      (kind === 'wards' && !code.trim())
+    )
+      return
+    try {
+      await save.mutateAsync({ id: editing?.id })
+      setEditing(undefined)
+      showToast({ type: 'success', title: 'Đã lưu địa giới' })
+    } catch (error) {
+      showToast({ type: 'error', title: 'Không thể lưu', description: getSafeErrorMessage(error) })
+    }
+  }
+  return (
+    <div>
+      <div className="flex flex-wrap justify-between gap-4">
+        <h2 className="text-3xl font-extrabold">Quản lý địa giới</h2>
+        <Button onClick={() => open(null)}>Thêm mới</Button>
+      </div>
+      <div className="mt-6 flex gap-2" role="tablist">
+        {tabs.map((tab) => (
+          <Button
+            key={tab.kind}
+            role="tab"
+            aria-selected={kind === tab.kind}
+            variant={kind === tab.kind ? 'primary' : 'secondary'}
+            onClick={() => {
+              setKind(tab.kind)
+              setEditing(undefined)
+            }}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+      {query.isPending && <Skeleton className="mt-6 h-72" />}
+      {query.isError && <ErrorState onRetry={() => query.refetch()} />}
+      {query.data && (
+        <div className="mt-6">
+          <AdminDataTable
+            caption="Danh sách địa giới"
+            columns={columns}
+            rows={query.data.content}
+            rowKey={(item) => item.id}
+          />
+        </div>
+      )}
+      <EntityFormDialog
+        open={editing !== undefined}
+        title={`${editing ? 'Sửa' : 'Thêm'} ${tabs.find((tab) => tab.kind === kind)?.label}`}
+        submitting={save.isPending}
+        onClose={() => setEditing(undefined)}
+        onSubmit={submit}
+      >
+        <Input
+          label="Tên"
+          required
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        {kind !== 'provinces' && (
+          <Input
+            label={kind === 'districts' ? 'Mã tỉnh/thành' : 'Mã quận/huyện'}
+            type="number"
+            min="1"
+            required
+            value={parentId || ''}
+            onChange={(event) => setParentId(Number(event.target.value))}
+          />
+        )}
+        {kind === 'wards' && (
+          <Input
+            label="Mã phường/xã"
+            required
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+          />
+        )}
+      </EntityFormDialog>
+      <DeleteConfirmation
+        open={Boolean(deleting)}
+        name={deleting?.name ?? ''}
+        loading={remove.isPending}
+        onClose={() => setDeleting(undefined)}
+        onConfirm={async () => {
+          if (!deleting) return
+          try {
+            await remove.mutateAsync(deleting.id)
+            setDeleting(undefined)
+          } catch (error) {
+            showToast({
+              type: 'error',
+              title: 'Không thể xóa dữ liệu đang được sử dụng',
+              description: getSafeErrorMessage(error),
+            })
+          }
+        }}
+      />
+    </div>
+  )
 }

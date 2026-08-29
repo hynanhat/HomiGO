@@ -17,7 +17,9 @@ async function login(page: import('@playwright/test').Page, email: string) {
 
 test('guest can search and open a real active listing', async ({ page }) => {
   await page.goto('/listings')
-  await expect(page.getByRole('link', { name: 'Căn hộ tốt nghiệp 102529', exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: 'Căn hộ tốt nghiệp 102529', exact: true }),
+  ).toBeVisible()
   await page.getByRole('link', { name: 'Căn hộ tốt nghiệp 102529', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Căn hộ tốt nghiệp 102529' })).toBeVisible()
   await expect(page).toHaveURL(/\/listings\/HMG-/)
