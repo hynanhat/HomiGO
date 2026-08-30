@@ -150,7 +150,10 @@ test('USER pays through SePay, creates DRAFT, uploads two images and submits PEN
   await expect(page.getByRole('heading', { name: 'Thanh toán đã được xác nhận' })).toBeVisible()
   await expect(page.getByText('Tài khoản của bạn đã có quyền người bán.')).toBeVisible()
   await page.getByRole('link', { name: 'Đi tới trang người bán' }).click()
-  await page.getByRole('button', { name: 'Tạo tin mới' }).click()
+  await page
+    .getByRole('complementary', { name: 'Điều hướng người bán' })
+    .getByRole('link', { name: 'Tạo tin mới' })
+    .click()
   await page.getByLabel(/Danh mục/).selectOption('11')
   await page.getByLabel('Tỉnh / thành phố').selectOption('21')
   await page.getByLabel(/Quận \/ huyện/).selectOption('32')

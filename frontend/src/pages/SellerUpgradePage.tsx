@@ -1,14 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  BadgeCheck,
-  BriefcaseBusiness,
-  Check,
-  CircleAlert,
-  Clock3,
-  History,
-  LockKeyhole,
-  ShieldCheck,
-} from 'lucide-react'
+import { BadgeCheck, BriefcaseBusiness, Check, CircleAlert, Clock3, History } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button, Card, Pagination } from '@/components/ui'
 import { ErrorState, Skeleton, useToast } from '@/components/feedback'
@@ -280,17 +271,6 @@ export default function SellerUpgradePage() {
                 Thanh toán qua SePay Sandbox
               </Button>
             )}
-
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-600">
-              <span className="inline-flex items-center gap-1.5">
-                <LockKeyhole className="size-4" aria-hidden="true" />
-                Secret chỉ nằm ở backend
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="size-4" aria-hidden="true" />
-                Xác nhận bằng IPN
-              </span>
-            </div>
           </Card>
         </section>
 
