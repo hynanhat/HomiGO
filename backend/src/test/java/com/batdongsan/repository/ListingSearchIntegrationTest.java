@@ -34,13 +34,14 @@ class ListingSearchIntegrationTest {
     }
 
     @Test
-    void filtersByTransactionLocationWardCategoryAndProjectAttributes() {
-        ListingFilter f=new ListingFilter();f.setTransactionType("BUY");f.setProvinceId(1001L);
-        f.setDistrictId(1101L);f.setWardId(1111L);f.setCategoryId(2001L);f.setBedrooms(3);
+    void filtersByTransactionCurrentLocationCategoryAndProjectAttributes() {
+        ListingFilter f=new ListingFilter();f.setTransactionType("BUY");f.setProvinceCode("79");
+        f.setCommuneCode("26734");f.setCategoryId(2001L);f.setBedrooms(3);
         List<Listing> results=search(f);
         assertFalse(results.isEmpty());
         assertTrue(results.stream().allMatch(l->l.getCategory().getTransactionType()==TransactionType.BUY
-                && l.getDistrict().getId().equals(1101L) && l.getWard().getId().equals(1111L)
+                && l.getAdministrativeProvince().getOfficialCode().equals("79")
+                && l.getCommuneUnit().getOfficialCode().equals("26734")
                 && l.getCategory().getId().equals(2001L) && l.getBedrooms()==3));
     }
 
@@ -63,7 +64,8 @@ class ListingSearchIntegrationTest {
         assertFalse(results.isEmpty());
         assertTrue(results.stream().allMatch(l->l.getLatitude()>=10.77&&l.getLatitude()<=10.80
                 && l.getLongitude()>=106.69&&l.getLongitude()<=106.72));
-        assertTrue(results.stream().noneMatch(l->l.getDistrict().getProvince().getId().equals(1002L)));
+        assertTrue(results.stream().noneMatch(
+                l->l.getAdministrativeProvince().getOfficialCode().equals("01")));
     }
 
     @Test

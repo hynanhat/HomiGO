@@ -12,7 +12,7 @@ describe('admin API contracts', () => {
     expect((await api.banUser(301, 'Vi phạm')).status).toBe('BANNED')
     expect((await api.unbanUser(301)).status).toBe('ACTIVE')
   })
-  it('supports category, full project data and location CRUD', async () => {
+  it('supports category and full project data', async () => {
     const category = await api.createCategory({ name: 'Đất', slug: 'dat', transactionType: 'BUY' })
     expect(category.slug).toBe('dat')
     await api.updateCategory(category.id, {
@@ -28,7 +28,25 @@ describe('admin API contracts', () => {
       latitude: expect.any(Number),
       longitude: expect.any(Number),
     })
-    expect((await api.getAdminLocations('provinces')).totalElements).toBe(1)
+  })
+  it('supports the pinned production bootstrap contracts', async () => {
+    const datasets = await api.getAdministrativeDatasets()
+    expect(datasets.content[0]).toMatchObject({
+      datasetVersion: api.PINNED_ADMINISTRATIVE_DATASET_VERSION,
+      expectedProvinceCount: 34,
+      expectedCommuneCount: 3321,
+      status: 'VALIDATED',
+    })
+
+    await expect(
+      api.validateAdministrativeDataset(api.PINNED_ADMINISTRATIVE_DATASET_VERSION),
+    ).resolves.toMatchObject({ status: 'VALIDATED', actualProvinceCount: 34 })
+    await expect(
+      api.activateAdministrativeDataset(api.PINNED_ADMINISTRATIVE_DATASET_VERSION),
+    ).resolves.toMatchObject({ status: 'ACTIVE', actualCommuneCount: 3321 })
+    await expect(
+      api.initializeProductionCategories(api.PINNED_PRODUCTION_CATEGORY_VERSION),
+    ).resolves.toEqual({ version: 'categories-v1', total: 16, created: 13, unchanged: 3 })
   })
   it.each([400, 403, 409])('surfaces safe %s responses', async (status) => {
     server.use(

@@ -23,38 +23,39 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
     java.util.Optional<Listing> findByIdForUpdate(@Param("id") Long id);
 
     @Override
-    @EntityGraph(attributePaths={"user","category","district","district.province","ward","project"})
+    @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project"})
     Page<Listing> findAll(Specification<Listing> specification, Pageable pageable);
 
-    @EntityGraph(attributePaths={"user","category","district","district.province","ward","project","images"})
+    @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project","images"})
     java.util.Optional<Listing> findByIdAndStatus(Long id, ListingStatus status);
 
-    @EntityGraph(attributePaths={"user","category","district","district.province","ward","project","images"})
+    @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project","images"})
     java.util.Optional<Listing> findByPublicCodeAndStatus(String publicCode, ListingStatus status);
 
     @EntityGraph(attributePaths={"user"})
     java.util.List<Listing> findByUserIdAndStatus(Long userId, ListingStatus status);
-    @EntityGraph(attributePaths={"user","category","district","district.province","ward","project"})
+    @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project"})
     Page<Listing> findByUserId(Long userId, Pageable pageable);
     @EntityGraph(attributePaths={"user"})
     Page<Listing> findByStatus(ListingStatus status, Pageable pageable);
     @EntityGraph(attributePaths={"user"})
     java.util.List<Listing> findByStatusAndExpiresAtBefore(ListingStatus status, LocalDateTime time);
 
-    @EntityGraph(attributePaths={"user","category","district","district.province","ward","project","images"})
+    @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project","images"})
     @Query("""
             select distinct candidate
             from Listing candidate
             join candidate.category category
-            join candidate.district district
+            join candidate.administrativeProvince province
+            join candidate.communeUnit commune
             where candidate.status = :status
               and candidate.id <> :targetId
               and (candidate.expiresAt is null or candidate.expiresAt > :now)
               and (
                     candidate.category.id = :categoryId
                  or category.transactionType = :transactionType
-                 or candidate.district.id = :districtId
-                 or district.province.id = :provinceId
+                 or commune.id = :communeUnitId
+                 or province.id = :administrativeProvinceId
                  or (:projectId is not null and candidate.project.id = :projectId)
               )
             order by candidate.publishedAt desc, candidate.id desc
@@ -64,8 +65,8 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
             @Param("targetId") Long targetId,
             @Param("categoryId") Long categoryId,
             @Param("transactionType") TransactionType transactionType,
-            @Param("districtId") Long districtId,
-            @Param("provinceId") Long provinceId,
+            @Param("communeUnitId") Long communeUnitId,
+            @Param("administrativeProvinceId") Long administrativeProvinceId,
             @Param("projectId") Long projectId,
             @Param("now") LocalDateTime now,
             Pageable pageable);

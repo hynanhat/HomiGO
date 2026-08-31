@@ -17,8 +17,8 @@ export default function EditListingPage() {
   const item = query.data
   const initial: ListingFormValues = {
     categoryId: item.categoryId ?? 0,
-    districtId: item.districtId ?? 0,
-    wardId: item.wardId ?? undefined,
+    provinceCode: item.provinceCode,
+    communeCode: item.communeCode,
     projectId: item.projectId ?? undefined,
     title: item.title,
     description: item.description,

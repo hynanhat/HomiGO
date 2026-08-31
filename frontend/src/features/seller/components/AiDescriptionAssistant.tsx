@@ -9,8 +9,8 @@ import type { ListingFormValues } from '../sellerTypes'
 const relevantSnapshot = (listing: ListingFormValues) =>
   JSON.stringify({
     categoryId: listing.categoryId,
-    districtId: listing.districtId,
-    wardId: listing.wardId,
+    provinceCode: listing.provinceCode,
+    communeCode: listing.communeCode,
     projectId: listing.projectId,
     title: listing.title,
     price: listing.price,
@@ -41,7 +41,8 @@ function validate(listing: ListingFormValues, keywords: string): string | null {
   const length = [...keywords.trim()].length
   if (length < 3 || length > 500) return 'Nhập từ khóa từ 3 đến 500 ký tự.'
   if (!listing.categoryId) return 'Chọn loại bất động sản trước khi tạo mô tả.'
-  if (!listing.districtId) return 'Chọn quận/huyện trước khi tạo mô tả.'
+  if (!listing.provinceCode) return 'Chọn tỉnh/thành phố trước khi tạo mô tả.'
+  if (!listing.communeCode) return 'Chọn phường/xã/đặc khu trước khi tạo mô tả.'
   if (!(listing.price > 0)) return 'Nhập giá hợp lệ trước khi tạo mô tả.'
   if (!(listing.area > 0)) return 'Nhập diện tích hợp lệ trước khi tạo mô tả.'
   return null

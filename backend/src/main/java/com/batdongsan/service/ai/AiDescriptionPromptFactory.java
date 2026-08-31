@@ -2,9 +2,9 @@ package com.batdongsan.service.ai;
 
 import com.batdongsan.dto.ai.AiDescriptionGenerateReq;
 import com.batdongsan.entity.*;
-import com.batdongsan.exception.BadRequestException;
 import com.batdongsan.exception.ResourceNotFoundException;
 import com.batdongsan.repository.*;
+import com.batdongsan.service.LocationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 public class AiDescriptionPromptFactory {
@@ -26,20 +25,17 @@ public class AiDescriptionPromptFactory {
             """;
 
     private final CategoryRepository categories;
-    private final DistrictRepository districts;
-    private final WardRepository wards;
     private final ProjectRepository projects;
+    private final LocationService locationService;
     private final ObjectMapper objectMapper;
 
     public AiDescriptionPromptFactory(CategoryRepository categories,
-                                      DistrictRepository districts,
-                                      WardRepository wards,
                                       ProjectRepository projects,
+                                      LocationService locationService,
                                       ObjectMapper objectMapper) {
         this.categories = categories;
-        this.districts = districts;
-        this.wards = wards;
         this.projects = projects;
+        this.locationService = locationService;
         this.objectMapper = objectMapper;
     }
 
@@ -47,22 +43,17 @@ public class AiDescriptionPromptFactory {
     public AiDescriptionClientRequest create(AiDescriptionGenerateReq request) {
         Category category = categories.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục."));
-        District district = districts.findById(request.getDistrictId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quận/huyện."));
-        Ward ward = request.getWardId() == null ? null : wards.findById(request.getWardId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã."));
-        if (ward != null && !Objects.equals(ward.getDistrict().getId(), district.getId())) {
-            throw new BadRequestException("Phường/xã không thuộc quận/huyện đã chọn.");
-        }
+        LocationService.CurrentAddress currentAddress = locationService.resolveActiveAddress(
+                request.getProvinceCode(), request.getCommuneCode());
 
         Project project = request.getProjectId() == null ? null : projects.findById(request.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dự án."));
-        if (project != null && !Objects.equals(project.getDistrict().getId(), district.getId())) {
-            throw new BadRequestException("Dự án không thuộc quận/huyện đã chọn.");
-        }
-        if (project != null && project.getWard() != null && ward != null
-                && !Objects.equals(project.getWard().getId(), ward.getId())) {
-            throw new BadRequestException("Dự án không thuộc phường/xã đã chọn.");
+        if (project != null && (project.getAdministrativeProvince() == null || project.getCommuneUnit() == null
+                || !project.getAdministrativeProvince().getId().equals(currentAddress.province().getId())
+                || !project.getCommuneUnit().getId().equals(currentAddress.communeUnit().getId()))) {
+            throw new com.batdongsan.exception.ApiException(
+                    com.batdongsan.exception.ErrorCode.LOCATION_RELATION_MISMATCH,
+                    "Dự án không thuộc địa chỉ đã chọn.");
         }
 
         Map<String, Object> data = new LinkedHashMap<>();
@@ -70,9 +61,9 @@ public class AiDescriptionPromptFactory {
         putText(data, "title", request.getTitle());
         data.put("category", clean(category.getName()));
         data.put("transactionType", category.getTransactionType().name());
-        data.put("district", clean(district.getName()));
-        data.put("province", clean(district.getProvince().getName()));
-        if (ward != null) data.put("ward", clean(ward.getName()));
+        data.put("province", clean(currentAddress.province().getOfficialName()));
+        data.put("commune", clean(currentAddress.communeUnit().getOfficialName()));
+        data.put("communeType", currentAddress.communeUnit().getUnitType().name());
         if (project != null) data.put("project", clean(project.getName()));
         putText(data, "address", request.getAddress());
         data.put("priceVnd", request.getPrice().toPlainString());

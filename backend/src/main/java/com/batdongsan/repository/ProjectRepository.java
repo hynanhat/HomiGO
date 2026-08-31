@@ -12,10 +12,10 @@ import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
     @Override
-    @EntityGraph(attributePaths = {"district", "district.province", "ward"})
+    @EntityGraph(attributePaths = {"administrativeProvince", "communeUnit"})
     Page<Project> findAll(Specification<Project> specification, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"district", "district.province", "ward"})
+    @EntityGraph(attributePaths = {"administrativeProvince", "communeUnit"})
     Optional<Project> findBySlug(String slug);
 
     boolean existsBySlug(String slug);

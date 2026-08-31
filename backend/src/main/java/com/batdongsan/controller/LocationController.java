@@ -3,9 +3,8 @@ package com.batdongsan.controller;
 import com.batdongsan.dto.ApiResponse;
 import com.batdongsan.dto.PageReq;
 import com.batdongsan.dto.PageResponse;
-import com.batdongsan.dto.location.DistrictRes;
-import com.batdongsan.dto.location.ProvinceRes;
-import com.batdongsan.dto.location.WardRes;
+import com.batdongsan.dto.location.AdministrativeProvinceRes;
+import com.batdongsan.dto.location.CommuneUnitRes;
 import com.batdongsan.service.LocationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
@@ -23,26 +22,19 @@ public class LocationController {
     }
 
     @GetMapping("/provinces")
-    public ResponseEntity<ApiResponse<PageResponse<ProvinceRes>>> provinces(@Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(locationService.getProvinces(page(pageReq)))));
+    public ResponseEntity<ApiResponse<PageResponse<AdministrativeProvinceRes>>> provinces(@Valid @ModelAttribute PageReq pageReq) {
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(locationService.getActiveProvinces(page(pageReq)))));
     }
 
-    @GetMapping("/provinces/{provinceId}/districts")
-    public ResponseEntity<ApiResponse<PageResponse<DistrictRes>>> districts(
-            @PathVariable Long provinceId, @Valid @ModelAttribute PageReq pageReq) {
+    @GetMapping("/provinces/{provinceCode}/commune-units")
+    public ResponseEntity<ApiResponse<PageResponse<CommuneUnitRes>>> communeUnits(
+            @PathVariable String provinceCode, @Valid @ModelAttribute PageReq pageReq) {
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
-                locationService.getDistricts(provinceId, page(pageReq)))));
-    }
-
-    @GetMapping("/districts/{districtId}/wards")
-    public ResponseEntity<ApiResponse<PageResponse<WardRes>>> wards(
-            @PathVariable Long districtId, @Valid @ModelAttribute PageReq pageReq) {
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(
-                locationService.getWards(districtId, page(pageReq)))));
+                locationService.getActiveCommuneUnits(provinceCode, page(pageReq)))));
     }
 
     private PageRequest page(PageReq pageReq) {
         return PageRequest.of(pageReq.getPage(), pageReq.getSize(),
-                Sort.by(Sort.Order.asc("name"), Sort.Order.asc("id")));
+                Sort.by(Sort.Order.asc("officialName"), Sort.Order.asc("id")));
     }
 }

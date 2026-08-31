@@ -44,7 +44,7 @@ export default function ProjectDetailPage() {
               <h1 className="mt-4 text-4xl font-extrabold">{project.name}</h1>
               <p className="mt-3 flex items-center gap-2 text-slate-300">
                 <MapPin className="size-5" />
-                {[project.address, project.wardName, project.districtName]
+                {[project.address, project.communeName, project.provinceName]
                   .filter(Boolean)
                   .join(', ')}
               </p>

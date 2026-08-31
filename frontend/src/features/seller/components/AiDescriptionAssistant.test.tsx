@@ -9,13 +9,13 @@ import type { ListingFormValues } from '../sellerTypes'
 
 const listing: ListingFormValues = {
   categoryId: 1,
-  districtId: 10,
-  wardId: 101,
+  provinceCode: '79',
+  communeCode: '26734',
   title: 'Căn hộ sáng thoáng',
   description: 'Mô tả hiện tại',
   price: 3_200_000_000,
   area: 78,
-  address: 'Nguyễn Huệ, Quận 1',
+  address: 'Nguyễn Huệ',
   bedrooms: 3,
   bathrooms: 2,
   contactName: 'An',

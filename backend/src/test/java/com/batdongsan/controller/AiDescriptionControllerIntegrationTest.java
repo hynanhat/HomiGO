@@ -65,7 +65,7 @@ class AiDescriptionControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/seller/ai-description/drafts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"keywords":"ban công thoáng","categoryId":1,"districtId":2,
+                                {"keywords":"ban công thoáng","categoryId":1,"provinceCode":"79","communeCode":"26734",
                                  "title":"Căn hộ sáng","price":3200000000,"area":78,
                                  "address":"Nguyễn Huệ","bedrooms":3,"bathrooms":2}
                                 """))
@@ -80,7 +80,7 @@ class AiDescriptionControllerIntegrationTest {
     void invalidInputNeverInvokesGeneration() throws Exception {
         mockMvc.perform(post("/api/v1/seller/ai-description/drafts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"keywords\":\"x\",\"categoryId\":1,\"districtId\":2,\"price\":10,\"area\":20}"))
+                        .content("{\"keywords\":\"x\",\"categoryId\":1,\"provinceCode\":\"79\",\"communeCode\":\"26734\",\"price\":10,\"area\":20}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
 

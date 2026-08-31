@@ -45,13 +45,12 @@ export function formatDate(value: string | Date | null | undefined): string {
 
 export interface AddressParts {
   address?: string | null
-  wardName?: string | null
-  districtName?: string | null
+  communeName?: string | null
   provinceName?: string | null
 }
 
 export function formatAddress(parts: AddressParts): string {
-  const uniqueParts = [parts.address, parts.wardName, parts.districtName, parts.provinceName]
+  const uniqueParts = [parts.address, parts.communeName, parts.provinceName]
     .map((part) => part?.trim())
     .filter((part, index, all): part is string => Boolean(part) && all.indexOf(part) === index)
 

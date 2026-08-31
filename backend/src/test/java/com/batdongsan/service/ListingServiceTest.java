@@ -4,6 +4,7 @@ import com.batdongsan.dto.ListingReq;
 import com.batdongsan.entity.*;
 import com.batdongsan.exception.ConflictException;
 import com.batdongsan.exception.BadRequestException;
+import com.batdongsan.exception.ApiException;
 import com.batdongsan.exception.ForbiddenException;
 import com.batdongsan.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,29 +28,32 @@ import static org.mockito.Mockito.*;
 class ListingServiceTest {
     @Mock ListingRepository listingRepository;
     @Mock CategoryRepository categoryRepository;
-    @Mock DistrictRepository districtRepository;
-    @Mock WardRepository wardRepository;
     @Mock ProjectRepository projectRepository;
     @Mock UserRepository userRepository;
     @Mock SavedListingRepository savedListingRepository;
     @Mock ListingStatusHistoryRepository historyRepository;
     @Mock ApplicationEventPublisher eventPublisher;
     @Mock NotificationService notificationService;
+    @Mock LocationService locationService;
 
     private ListingService service;
     private User owner;
     private Category category;
-    private District district;
+    private AdministrativeProvince province;
+    private CommuneUnit commune;
 
     @BeforeEach
     void setUp() {
-        service = new ListingService(listingRepository, categoryRepository, districtRepository,
-                wardRepository, projectRepository, userRepository, savedListingRepository, historyRepository,
-                eventPublisher, notificationService);
+        service = new ListingService(listingRepository, categoryRepository, projectRepository,
+                userRepository, savedListingRepository, historyRepository,
+                eventPublisher, notificationService, locationService);
         owner = user(1L, "owner@example.com");
         category = new Category(); category.setId(2L); category.setName("Nhà");
-        Province province = new Province(); province.setId(3L); province.setName("TP.HCM");
-        district = new District(); district.setId(4L); district.setName("Quận 1"); district.setProvince(province);
+        province = new AdministrativeProvince(); province.setId(3L); province.setOfficialCode("79");
+        province.setOfficialName("Thành phố Hồ Chí Minh");
+        commune = new CommuneUnit(); commune.setId(4L); commune.setOfficialCode("26734");
+        commune.setOfficialName("Phường Bến Nghé"); commune.setUnitType(CommuneUnitType.WARD);
+        commune.setAdministrativeProvince(province);
     }
 
     @Test
@@ -168,21 +172,23 @@ class ListingServiceTest {
     }
 
     @Test
-    void listingProjectMustBelongToSelectedDistrict() {
+    void listingProjectMustBelongToSelectedCurrentAddress() {
         Listing listing = listing(ListingStatus.DRAFT);
         ListingReq request = request(0L);
         request.setProjectId(20L);
-        Province province = district.getProvince();
-        District anotherDistrict = new District(); anotherDistrict.setId(99L); anotherDistrict.setProvince(province);
-        Project project = new Project(); project.setId(20L); project.setDistrict(anotherDistrict);
+        AdministrativeProvince anotherProvince = new AdministrativeProvince(); anotherProvince.setId(99L);
+        CommuneUnit anotherCommune = new CommuneUnit(); anotherCommune.setId(100L);
+        anotherCommune.setAdministrativeProvince(anotherProvince);
+        Project project = new Project(); project.setId(20L); project.setAdministrativeProvince(anotherProvince);
+        project.setCommuneUnit(anotherCommune);
         when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
         stubReferences();
         when(projectRepository.findById(20L)).thenReturn(Optional.of(project));
 
-        BadRequestException error = assertThrows(BadRequestException.class,
+        ApiException error = assertThrows(ApiException.class,
                 () -> service.updateListing(10L, owner.getEmail(), request));
 
-        assertEquals("Dự án không thuộc quận/huyện đã chọn.", error.getMessage());
+        assertEquals("Dự án không thuộc địa chỉ đã chọn.", error.getMessage());
         verify(listingRepository, never()).saveAndFlush(any());
     }
 
@@ -203,12 +209,13 @@ class ListingServiceTest {
     private void stubReferences() {
         lenient().when(userRepository.findByEmail(owner.getEmail())).thenReturn(Optional.of(owner));
         when(categoryRepository.findById(2L)).thenReturn(Optional.of(category));
-        when(districtRepository.findById(4L)).thenReturn(Optional.of(district));
+        when(locationService.resolveActiveAddress("79", "26734"))
+                .thenReturn(new LocationService.CurrentAddress(province, commune));
     }
 
     private ListingReq request(Long version) {
         ListingReq req = new ListingReq();
-        req.setCategoryId(2L); req.setDistrictId(4L); req.setTitle("Nhà đẹp trung tâm");
+        req.setCategoryId(2L); req.setProvinceCode("79"); req.setCommuneCode("26734"); req.setTitle("Nhà đẹp trung tâm");
         req.setDescription("Mô tả đầy đủ về bất động sản"); req.setPrice(BigDecimal.valueOf(2_000_000_000L));
         req.setArea(80.0); req.setAddress("123 Nguyễn Huệ"); req.setContactName("Nguyễn An");
         req.setContactPhone("0901234567"); req.setVersion(version);
@@ -217,7 +224,8 @@ class ListingServiceTest {
 
     private Listing listing(ListingStatus status) {
         Listing listing = new Listing(); listing.setId(10L); listing.setUser(owner); listing.setCategory(category);
-        listing.setDistrict(district); listing.setTitle("Tin cũ"); listing.setDescription("Mô tả cũ");
+        listing.setAdministrativeProvince(province); listing.setCommuneUnit(commune);
+        listing.setTitle("Tin cũ"); listing.setDescription("Mô tả cũ");
         listing.setPrice(BigDecimal.TEN); listing.setArea(10.0); listing.setAddress("Địa chỉ");
         listing.setContactName("An"); listing.setContactPhone("0901234567"); listing.setStatus(status); listing.setVersion(0L);
         return listing;

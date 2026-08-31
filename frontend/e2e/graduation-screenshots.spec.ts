@@ -5,13 +5,15 @@ const listing = {
   publicCode: 'HMG-2026-000101',
   userId: 2,
   version: 1,
-  title: 'Căn hộ hai phòng ngủ tại Thảo Điền',
+  title: 'Căn hộ hai phòng ngủ tại An Khánh',
   description: 'Không gian sáng, phù hợp gia đình trẻ.',
   categoryName: 'Căn hộ',
   projectName: 'Homi Riverside',
-  provinceName: 'TP. Hồ Chí Minh',
-  districtName: 'Thành phố Thủ Đức',
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   price: 5_800_000_000,
   area: 82,
@@ -30,10 +32,11 @@ const project = {
   name: 'Homi Riverside',
   slug: 'homi-riverside',
   investor: 'Homi Group',
-  districtId: 32,
-  districtName: 'Thành phố Thủ Đức',
-  wardId: 41,
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   status: 'IN_PROGRESS',
   priceFrom: 4_500_000_000,
@@ -85,7 +88,7 @@ test('capture approved graduation homepage', async ({ page }, testInfo) => {
   await mockHomepage(page)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Tìm đúng nơi. Sống đúng chất.' })).toBeVisible()
-  await expect(page.getByText('Căn hộ hai phòng ngủ tại Thảo Điền')).toBeVisible()
+  await expect(page.getByText('Căn hộ hai phòng ngủ tại An Khánh')).toBeVisible()
   await page.screenshot({
     path: `../.specify/specs/002-modern-business-frontend/evidence/screenshots/home-${testInfo.project.name}.png`,
     fullPage: true,

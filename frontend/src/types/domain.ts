@@ -54,10 +54,10 @@ export interface Listing {
   projectName?: string | null
   projectId?: number | null
   provinceName: string
-  districtName: string
-  districtId?: number
-  wardName?: string | null
-  wardId?: number | null
+  provinceCode: string
+  communeName: string
+  communeCode: string
+  communeType: 'COMMUNE' | 'WARD' | 'SPECIAL_ZONE'
   address: string
   latitude?: number | null
   longitude?: number | null
@@ -86,9 +86,8 @@ export type ListingSort = 'newest' | 'priceAsc' | 'priceDesc' | 'areaAsc' | 'are
 export interface ListingSearchState {
   keyword?: string
   transactionType?: TransactionType
-  provinceId?: number
-  districtId?: number
-  wardId?: number
+  provinceCode?: string
+  communeCode?: string
   categoryId?: number
   projectId?: number
   minPrice?: number
@@ -106,21 +105,22 @@ export interface ListingSearchState {
 }
 
 export interface ProvinceOption {
-  id: number
-  name: string
-}
-
-export interface DistrictOption {
-  id: number
-  provinceId: number
-  name: string
-}
-
-export interface WardOption {
-  id: number
-  districtId: number
-  name: string
   code: string
+  name: string
+  type: 'PROVINCE' | 'CENTRAL_MUNICIPALITY'
+  active: boolean
+  effectiveFrom: string
+  sourceVersion: string
+}
+
+export interface CommuneUnitOption {
+  code: string
+  provinceCode: string
+  name: string
+  type: 'COMMUNE' | 'WARD' | 'SPECIAL_ZONE'
+  active: boolean
+  effectiveFrom: string
+  sourceVersion: string
 }
 
 export interface ProjectSummary {
@@ -128,10 +128,11 @@ export interface ProjectSummary {
   name: string
   slug: string
   investor: string
-  districtId: number
-  districtName: string
-  wardId?: number | null
-  wardName?: string | null
+  provinceCode: string
+  provinceName: string
+  communeCode: string
+  communeName: string
+  communeType: 'COMMUNE' | 'WARD' | 'SPECIAL_ZONE'
   address: string
   description: string
   latitude?: number | null
@@ -148,7 +149,8 @@ export interface ProjectDetail extends ProjectSummary {
 
 export interface ProjectSearchState {
   keyword?: string
-  districtId?: number
+  provinceCode?: string
+  communeCode?: string
   status?: ProjectStatus
   page: number
   size: number

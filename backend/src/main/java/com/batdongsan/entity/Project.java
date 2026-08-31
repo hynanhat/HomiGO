@@ -20,13 +20,13 @@ public class Project {
     @Column(nullable = false)
     private String investor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "district_id", nullable = false)
-    private District district;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "administrative_province_id", nullable = false)
+    private AdministrativeProvince administrativeProvince;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ward_id")
-    private Ward ward;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "commune_unit_id", nullable = false)
+    private CommuneUnit communeUnit;
 
     @Column(nullable = false, length = 500)
     private String address;
@@ -62,10 +62,10 @@ public class Project {
     public void setSlug(String slug) { this.slug = slug; }
     public String getInvestor() { return investor; }
     public void setInvestor(String investor) { this.investor = investor; }
-    public District getDistrict() { return district; }
-    public void setDistrict(District district) { this.district = district; }
-    public Ward getWard() { return ward; }
-    public void setWard(Ward ward) { this.ward = ward; }
+    public AdministrativeProvince getAdministrativeProvince() { return administrativeProvince; }
+    public void setAdministrativeProvince(AdministrativeProvince administrativeProvince) { this.administrativeProvince = administrativeProvince; }
+    public CommuneUnit getCommuneUnit() { return communeUnit; }
+    public void setCommuneUnit(CommuneUnit communeUnit) { this.communeUnit = communeUnit; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
     public Double getLatitude() { return latitude; }

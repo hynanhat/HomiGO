@@ -13,7 +13,8 @@ import type { ListingFormValues } from './sellerTypes'
 
 const values: ListingFormValues = {
   categoryId: 11,
-  districtId: 32,
+  provinceCode: '79',
+  communeCode: '26734',
   title: 'Tin hợp lệ',
   description: 'Mô tả',
   price: 1000000,

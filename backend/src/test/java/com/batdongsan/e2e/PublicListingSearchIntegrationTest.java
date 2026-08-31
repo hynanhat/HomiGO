@@ -29,8 +29,8 @@ class PublicListingSearchIntegrationTest {
     @Test
     void combinedFiltersAndSortReturnOnlyExactMatches() throws Exception {
         mvc.perform(get("/api/v1/listings")
-                        .param("keyword","căn hộ").param("transactionType","BUY").param("provinceId","1001")
-                        .param("districtId","1101").param("categoryId","2001").param("minPrice","2000000000")
+                        .param("keyword","căn hộ").param("transactionType","BUY").param("provinceCode","79")
+                        .param("communeCode","26734").param("categoryId","2001").param("minPrice","2000000000")
                         .param("maxPrice","6000000000").param("minArea","70").param("maxArea","120")
                         .param("bedrooms","3").param("minLat","10.77").param("maxLat","10.79")
                         .param("minLng","106.69").param("maxLng","106.71").param("sort","priceAsc"))
@@ -43,7 +43,9 @@ class PublicListingSearchIntegrationTest {
     void detailUsesPublicCodeAndNeverExposesExpiredOrPendingListings() throws Exception {
         mvc.perform(get("/api/v1/listings/SEARCH-001")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.publicCode").value("SEARCH-001"))
-                .andExpect(jsonPath("$.data.districtName").value("Quận 1"));
+                .andExpect(jsonPath("$.data.provinceCode").value("79"))
+                .andExpect(jsonPath("$.data.communeCode").value("26734"))
+                .andExpect(jsonPath("$.data.districtName").doesNotExist());
         mvc.perform(get("/api/v1/listings/SEARCH-025")).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/listings/SEARCH-027")).andExpect(status().isNotFound());
     }

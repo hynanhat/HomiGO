@@ -14,11 +14,12 @@ public class ProjectReq {
     @NotBlank(message = "Chủ đầu tư không được để trống.")
     @Size(max = 255, message = "Tên chủ đầu tư không được vượt quá 255 ký tự.")
     private String investor;
-    @NotNull(message = "Quận/huyện không được để trống.")
-    @Min(value = 1, message = "Mã quận/huyện phải lớn hơn 0.")
-    private Long districtId;
-    @Min(value = 1, message = "Mã phường/xã phải lớn hơn 0.")
-    private Long wardId;
+    @NotBlank(message = "Mã tỉnh/thành phố không được để trống.")
+    @Pattern(regexp = "^[0-9]{2}$", message = "Mã tỉnh/thành phố không hợp lệ.")
+    private String provinceCode;
+    @NotBlank(message = "Mã phường/xã/đặc khu không được để trống.")
+    @Pattern(regexp = "^[0-9]{5}$", message = "Mã phường/xã/đặc khu không hợp lệ.")
+    private String communeCode;
     @NotBlank(message = "Địa chỉ dự án không được để trống.")
     @Size(max = 500, message = "Địa chỉ dự án không được vượt quá 500 ký tự.")
     private String address;
@@ -55,10 +56,10 @@ public class ProjectReq {
     public void setSlug(String slug) { this.slug = slug; }
     public String getInvestor() { return investor; }
     public void setInvestor(String investor) { this.investor = investor; }
-    public Long getDistrictId() { return districtId; }
-    public void setDistrictId(Long districtId) { this.districtId = districtId; }
-    public Long getWardId() { return wardId; }
-    public void setWardId(Long wardId) { this.wardId = wardId; }
+    public String getProvinceCode() { return provinceCode; }
+    public void setProvinceCode(String provinceCode) { this.provinceCode = provinceCode; }
+    public String getCommuneCode() { return communeCode; }
+    public void setCommuneCode(String communeCode) { this.communeCode = communeCode; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
     public Double getLatitude() { return latitude; }

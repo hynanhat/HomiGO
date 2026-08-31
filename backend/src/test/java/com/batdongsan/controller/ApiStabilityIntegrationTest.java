@@ -1,11 +1,18 @@
 package com.batdongsan.controller;
 
+import com.batdongsan.repository.AdministrativeCatalogStateRepository;
+import com.batdongsan.repository.AdministrativeDatasetReleaseRepository;
+import com.batdongsan.repository.AdministrativeProvinceRepository;
+import com.batdongsan.repository.CommuneUnitRepository;
+import com.batdongsan.support.CurrentLocationTestData;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,10 +21,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class ApiStabilityIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private AdministrativeDatasetReleaseRepository releases;
+    @Autowired
+    private AdministrativeCatalogStateRepository catalogStates;
+    @Autowired
+    private AdministrativeProvinceRepository provinces;
+    @Autowired
+    private CommuneUnitRepository communes;
+
+    @BeforeEach
+    void seedCurrentCatalog() {
+        CurrentLocationTestData.seed("api-stability", releases, catalogStates, provinces, communes);
+    }
 
     @Test
     void unknownPublicApiRouteReturnsStandardNotFoundResponse() throws Exception {

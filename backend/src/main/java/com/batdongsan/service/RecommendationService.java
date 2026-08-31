@@ -39,8 +39,8 @@ public class RecommendationService {
                 target.getId(),
                 target.getCategory().getId(),
                 target.getCategory().getTransactionType(),
-                target.getDistrict().getId(),
-                target.getDistrict().getProvince().getId(),
+                target.getCommuneUnit().getId(),
+                target.getAdministrativeProvince().getId(),
                 projectId,
                 now,
                 PageRequest.of(0, CANDIDATE_LIMIT));
@@ -74,11 +74,11 @@ public class RecommendationService {
             if (!sameCategory) reasons.add("Cùng nhu cầu giao dịch");
         }
 
-        if (Objects.equals(target.getDistrict().getId(), candidate.getDistrict().getId())) {
+        if (Objects.equals(target.getCommuneUnit().getId(), candidate.getCommuneUnit().getId())) {
             score += 20;
-            reasons.add("Cùng quận/huyện");
-        } else if (Objects.equals(target.getDistrict().getProvince().getId(),
-                candidate.getDistrict().getProvince().getId())) {
+            reasons.add("Cùng phường/xã/đặc khu");
+        } else if (Objects.equals(target.getAdministrativeProvince().getId(),
+                candidate.getAdministrativeProvince().getId())) {
             score += 8;
             reasons.add("Cùng tỉnh/thành phố");
         }

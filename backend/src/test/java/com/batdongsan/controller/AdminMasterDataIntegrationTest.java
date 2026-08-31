@@ -12,7 +12,6 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,9 +25,6 @@ class AdminMasterDataIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private CategoryRepository categories;
     @Autowired private ProjectRepository projects;
-    @Autowired private ProvinceRepository provinces;
-    @Autowired private DistrictRepository districts;
-    @Autowired private WardRepository wards;
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -56,51 +52,20 @@ class AdminMasterDataIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void adminCanCreateUpdateAndDeleteProjectWithValidatedRelationships() throws Exception {
-        String request = projectJson("admin-project", 1311, 13111);
+        String request = projectJson("admin-project", "79", "26734");
         mockMvc.perform(post("/api/v1/admin/projects").contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.slug").value("admin-project"));
         Long id = projects.findBySlug("admin-project").orElseThrow().getId();
 
         mockMvc.perform(put("/api/v1/admin/projects/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(projectJson("admin-project-updated", 1311, 13111)))
+                        .content(projectJson("admin-project-updated", "79", "26734")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.slug").value("admin-project-updated"));
         mockMvc.perform(post("/api/v1/admin/projects")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(projectJson("wrong-location", 1311, 13121)))
+                        .content(projectJson("wrong-location", "01", "26734")))
                 .andExpect(status().isBadRequest());
         mockMvc.perform(delete("/api/v1/admin/projects/{id}", id)).andExpect(status().isOk());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void adminCanCrudLocationHierarchy() throws Exception {
-        mockMvc.perform(post("/api/v1/admin/locations/provinces")
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Đà Nẵng\"}"))
-                .andExpect(status().isOk());
-        Long provinceId = provinces.findAll().stream().filter(p -> p.getName().equals("Đà Nẵng"))
-                .findFirst().orElseThrow().getId();
-
-        mockMvc.perform(post("/api/v1/admin/locations/districts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"provinceId\":" + provinceId + ",\"name\":\"Hải Châu\"}"))
-                .andExpect(status().isOk());
-        Long districtId = districts.findAll().stream().filter(d -> d.getName().equals("Hải Châu"))
-                .findFirst().orElseThrow().getId();
-
-        mockMvc.perform(post("/api/v1/admin/locations/wards")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"districtId\":" + districtId + ",\"name\":\"Thạch Thang\",\"code\":\"ADMIN-THACH-THANG\"}"))
-                .andExpect(status().isOk());
-        Long wardId = wards.findAll().stream().filter(w -> w.getCode().equals("ADMIN-THACH-THANG"))
-                .findFirst().orElseThrow().getId();
-
-        mockMvc.perform(get("/api/v1/admin/locations/wards"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.totalElements").value(3));
-        mockMvc.perform(delete("/api/v1/admin/locations/wards/{id}", wardId)).andExpect(status().isOk());
-        mockMvc.perform(delete("/api/v1/admin/locations/districts/{id}", districtId)).andExpect(status().isOk());
-        mockMvc.perform(delete("/api/v1/admin/locations/provinces/{id}", provinceId)).andExpect(status().isOk());
-        assertTrue(provinces.findById(provinceId).isEmpty());
     }
 
     @Test
@@ -114,18 +79,19 @@ class AdminMasterDataIntegrationTest {
     @Test
     @WithMockUser(roles = "USER")
     void nonAdminCannotMutateMasterData() throws Exception {
-        mockMvc.perform(post("/api/v1/admin/locations/provinces")
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Không hợp lệ\"}"))
+        mockMvc.perform(post("/api/v1/admin/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(projectJson("forbidden-project", "79", "26734")))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
     }
 
-    private String projectJson(String slug, long districtId, long wardId) {
+    private String projectJson(String slug, String provinceCode, String communeCode) {
         return """
                 {"name":"Admin Project","slug":"%s","investor":"Admin Investor",
-                 "districtId":%d,"wardId":%d,"address":"10 Test Street",
+                 "provinceCode":"%s","communeCode":"%s","address":"10 Test Street",
                  "latitude":10.77,"longitude":106.70,"status":"IN_PROGRESS",
                  "description":"Dự án dùng để kiểm thử CRUD.",
                  "priceFrom":2000000000,"priceTo":5000000000}
-                """.formatted(slug, districtId, wardId);
+                """.formatted(slug, provinceCode, communeCode);
     }
 }

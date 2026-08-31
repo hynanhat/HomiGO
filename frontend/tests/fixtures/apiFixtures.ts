@@ -1,15 +1,15 @@
 import type { ApiResponse, PageResponse } from '@/types/api'
+import type { AdministrativeDatasetRelease } from '@/features/admin/adminApi'
 import type {
   AdminUser,
   AuthSession,
   Category,
-  DistrictOption,
+  CommuneUnitOption,
   Listing,
   ModerationItem,
-  ProjectSummary,
   ProjectDetail,
+  ProjectSummary,
   ProvinceOption,
-  WardOption,
   UserProfile,
 } from '@/types/domain'
 
@@ -57,13 +57,44 @@ export const categoryFixtures: Category[] = [
   { id: 13, name: 'Căn hộ cho thuê', slug: 'can-ho-cho-thue', transactionType: 'RENT' },
 ]
 
-export const provinceFixtures: ProvinceOption[] = [{ id: 21, name: 'TP. Hồ Chí Minh' }]
-export const districtFixtures: DistrictOption[] = [
-  { id: 31, provinceId: 21, name: 'Quận 1' },
-  { id: 32, provinceId: 21, name: 'Thành phố Thủ Đức' },
+export const administrativeDatasetFixture: AdministrativeDatasetRelease = {
+  datasetVersion: 'vn-administrative-units-2025-07-01',
+  authority: 'Cục Thống kê',
+  documentNumber: 'Quyết định 19/2025/QĐ-TTg ngày 30/06/2025',
+  effectiveDate: '2025-07-01',
+  rawSha256: 'f83055f528bf320f5546b6e62aa5cf58abe8f3594f95c9d04f82732c3c682b69',
+  normalizedSha256: '0fc307a6e2b1ce90a912e14ddb3d1e564f479b950d6ce15bf9e6b43ae713b7cf',
+  expectedProvinceCount: 34,
+  expectedCommuneCount: 3_321,
+  actualProvinceCount: 34,
+  actualCommuneCount: 3_321,
+  status: 'VALIDATED',
+  validationSummary: '{"valid":true}',
+  validatedAt: '2026-08-30T14:30:00',
+  activatedAt: null,
+}
+
+export const provinceFixtures: ProvinceOption[] = [
+  {
+    code: '79',
+    name: 'Thành phố Hồ Chí Minh',
+    type: 'CENTRAL_MUNICIPALITY',
+    active: true,
+    effectiveFrom: '2025-07-01',
+    sourceVersion: '2025-07-01',
+  },
 ]
-export const wardFixtures: WardOption[] = [
-  { id: 41, districtId: 32, name: 'Phường Thảo Điền', code: 'THAO-DIEN' },
+
+export const communeFixtures: CommuneUnitOption[] = [
+  {
+    code: '26734',
+    provinceCode: '79',
+    name: 'Phường An Khánh',
+    type: 'WARD',
+    active: true,
+    effectiveFrom: '2025-07-01',
+    sourceVersion: '2025-07-01',
+  },
 ]
 
 export const listingFixtures: Listing[] = [
@@ -72,16 +103,17 @@ export const listingFixtures: Listing[] = [
     publicCode: 'HMG-2026-000101',
     userId: 2,
     version: 1,
-    title: 'Căn hộ hai phòng ngủ tại Thảo Điền',
+    title: 'Căn hộ hai phòng ngủ tại An Khánh',
     description: 'Không gian sáng, phù hợp gia đình trẻ.',
     categoryName: 'Căn hộ',
     categoryId: 11,
     projectName: 'Homi Riverside',
-    provinceName: 'TP. Hồ Chí Minh',
-    districtName: 'Thành phố Thủ Đức',
-    districtId: 32,
-    wardName: 'Phường Thảo Điền',
-    wardId: 41,
+    projectId: 201,
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: '79',
+    communeName: 'Phường An Khánh',
+    communeCode: '26734',
+    communeType: 'WARD',
     address: '12 Nguyễn Văn Hưởng',
     price: 5_800_000_000,
     area: 82,
@@ -103,10 +135,11 @@ export const projectFixtures: ProjectSummary[] = [
     name: 'Homi Riverside',
     slug: 'homi-riverside',
     investor: 'Homi Group',
-    districtId: 32,
-    districtName: 'Thành phố Thủ Đức',
-    wardId: 41,
-    wardName: 'Phường Thảo Điền',
+    provinceCode: '79',
+    provinceName: 'Thành phố Hồ Chí Minh',
+    communeCode: '26734',
+    communeName: 'Phường An Khánh',
+    communeType: 'WARD',
     address: '12 Nguyễn Văn Hưởng',
     description:
       'Dự án ven sông với không gian xanh, tiện ích đồng bộ và kết nối thuận tiện tới trung tâm.',
@@ -121,10 +154,6 @@ export const projectFixtures: ProjectSummary[] = [
 
 export const projectDetailFixture: ProjectDetail = {
   ...projectFixtures[0],
-  description:
-    'Dự án ven sông với không gian xanh, tiện ích đồng bộ và kết nối thuận tiện tới trung tâm.',
-  latitude: 10.804,
-  longitude: 106.732,
   listings: buildPage(
     listingFixtures.filter((listing) => listing.status === 'ACTIVE'),
     0,

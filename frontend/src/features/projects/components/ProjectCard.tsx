@@ -34,7 +34,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
       <p className="mt-1 text-sm text-ink-600">Chủ đầu tư: {project.investor}</p>
       <p className="mt-4 flex items-start gap-2 text-sm text-ink-600">
         <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        {[project.address, project.wardName, project.districtName].filter(Boolean).join(', ')}
+        {[project.address, project.communeName, project.provinceName].filter(Boolean).join(', ')}
       </p>
       <p className="mt-auto border-t border-brand-100 pt-5 text-lg font-extrabold text-brand-700">
         {price}

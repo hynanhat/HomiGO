@@ -1,10 +1,11 @@
 import { http, HttpResponse } from 'msw'
 import {
+  administrativeDatasetFixture,
   adminUserFixtures,
   buildApiResponse,
   buildPage,
   categoryFixtures,
-  districtFixtures,
+  communeFixtures,
   listingFixtures,
   moderationFixtures,
   projectFixtures,
@@ -12,7 +13,6 @@ import {
   provinceFixtures,
   sessionFixture,
   profileFixture,
-  wardFixtures,
 } from '../fixtures/apiFixtures'
 
 function pagination(request: Request) {
@@ -228,7 +228,7 @@ export const handlers = [
         price: index === 0 ? 6_100_000_000 : 5_400_000_000,
       },
       score: 88 - index * 7,
-      reasons: ['Cùng loại bất động sản', 'Cùng quận/huyện'],
+      reasons: ['Cùng loại bất động sản', 'Cùng phường/xã/đặc khu'],
     }))
     return HttpResponse.json(buildApiResponse(recommendations))
   }),
@@ -295,13 +295,9 @@ export const handlers = [
     const { page, size } = pagination(request)
     return HttpResponse.json(buildApiResponse(buildPage(provinceFixtures, page, size)))
   }),
-  http.get('*/api/v1/locations/provinces/:provinceId/districts', ({ request }) => {
+  http.get('*/api/v1/locations/provinces/:provinceCode/commune-units', ({ request }) => {
     const { page, size } = pagination(request)
-    return HttpResponse.json(buildApiResponse(buildPage(districtFixtures, page, size)))
-  }),
-  http.get('*/api/v1/locations/districts/:districtId/wards', ({ request }) => {
-    const { page, size } = pagination(request)
-    return HttpResponse.json(buildApiResponse(buildPage(wardFixtures, page, size)))
+    return HttpResponse.json(buildApiResponse(buildPage(communeFixtures, page, size)))
   }),
   http.get('*/api/v1/admin/listings', ({ request }) => {
     const { page, size } = pagination(request)
@@ -350,7 +346,9 @@ export const handlers = [
     HttpResponse.json(
       buildApiResponse({
         id: 299,
-        districtName: 'Thành phố Thủ Đức',
+        provinceName: 'Thành phố Hồ Chí Minh',
+        communeName: 'Phường An Khánh',
+        communeType: 'WARD',
         updatedAt: '2026-08-17T00:00:00',
         ...((await request.json()) as object),
       }),
@@ -360,34 +358,48 @@ export const handlers = [
     HttpResponse.json(
       buildApiResponse({
         id: Number(params.id),
-        districtName: 'Thành phố Thủ Đức',
+        provinceName: 'Thành phố Hồ Chí Minh',
+        communeName: 'Phường An Khánh',
+        communeType: 'WARD',
         updatedAt: '2026-08-17T00:00:00',
         ...((await request.json()) as object),
       }),
     ),
   ),
   http.delete('*/api/v1/admin/projects/:id', () => HttpResponse.json(buildApiResponse(null))),
-  http.get('*/api/v1/admin/locations/provinces', ({ request }) => {
+  http.get('*/api/v1/admin/location-datasets', ({ request }) => {
     const { page, size } = pagination(request)
-    return HttpResponse.json(buildApiResponse(buildPage(provinceFixtures, page, size)))
+    return HttpResponse.json(
+      buildApiResponse(buildPage([administrativeDatasetFixture], page, size)),
+    )
   }),
-  http.get('*/api/v1/admin/locations/districts', ({ request }) => {
-    const { page, size } = pagination(request)
-    return HttpResponse.json(buildApiResponse(buildPage(districtFixtures, page, size)))
-  }),
-  http.get('*/api/v1/admin/locations/wards', ({ request }) => {
-    const { page, size } = pagination(request)
-    return HttpResponse.json(buildApiResponse(buildPage(wardFixtures, page, size)))
-  }),
-  http.post('*/api/v1/admin/locations/:kind', async ({ request }) =>
-    HttpResponse.json(buildApiResponse({ id: 999, ...((await request.json()) as object) })),
-  ),
-  http.put('*/api/v1/admin/locations/:kind/:id', async ({ params, request }) =>
+  http.post('*/api/v1/admin/location-datasets/:datasetVersion/validate', ({ params }) =>
     HttpResponse.json(
-      buildApiResponse({ id: Number(params.id), ...((await request.json()) as object) }),
+      buildApiResponse({
+        ...administrativeDatasetFixture,
+        datasetVersion: String(params.datasetVersion),
+        status: 'VALIDATED' as const,
+      }),
     ),
   ),
-  http.delete('*/api/v1/admin/locations/:kind/:id', () =>
-    HttpResponse.json(buildApiResponse(null)),
+  http.post('*/api/v1/admin/location-datasets/:datasetVersion/activate', ({ params }) =>
+    HttpResponse.json(
+      buildApiResponse({
+        ...administrativeDatasetFixture,
+        datasetVersion: String(params.datasetVersion),
+        status: 'ACTIVE' as const,
+        activatedAt: '2026-08-30T15:00:00',
+      }),
+    ),
+  ),
+  http.post('*/api/v1/admin/production-categories/:version/initialize', ({ params }) =>
+    HttpResponse.json(
+      buildApiResponse({
+        version: String(params.version),
+        total: 16,
+        created: 13,
+        unchanged: 3,
+      }),
+    ),
   ),
 ]

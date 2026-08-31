@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { Button, Input, Select } from '@/components/ui'
+import { TwoLevelLocationFields } from '@/components/location/TwoLevelLocationFields'
 import { useCategories } from '@/features/categories/categoryQueries'
-import { useDistricts, useProvinces, useWards } from '@/features/locations/locationQueries'
 import type { ListingSearchState } from '@/types/domain'
 
 interface Props {
@@ -12,9 +12,6 @@ interface Props {
 const optionalNumber = (value: string) => (value === '' ? undefined : Number(value))
 function Fields({ value, onChange }: Props) {
   const categories = useCategories()
-  const provinces = useProvinces()
-  const districts = useDistricts(value.provinceId)
-  const wards = useWards(value.districtId)
   return (
     <div className="grid gap-4">
       <Input
@@ -49,52 +46,19 @@ function Fields({ value, onChange }: Props) {
           </option>
         ))}
       </Select>
-      <Select
-        label="Tỉnh / thành phố"
-        value={value.provinceId ?? ''}
-        onChange={(event) =>
+      <TwoLevelLocationFields
+        required={false}
+        className="grid gap-4"
+        value={value}
+        provinceEmptyLabel="Toàn quốc"
+        communeEmptyLabel="Tất cả phường/xã/đặc khu"
+        onChange={(location) =>
           onChange({
-            provinceId: optionalNumber(event.target.value),
-            districtId: undefined,
-            wardId: undefined,
+            provinceCode: location.provinceCode,
+            communeCode: location.communeCode,
           })
         }
-      >
-        <option value="">Toàn quốc</option>
-        {provinces.data?.content.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </Select>
-      <Select
-        label="Quận / huyện"
-        disabled={!value.provinceId}
-        value={value.districtId ?? ''}
-        onChange={(event) =>
-          onChange({ districtId: optionalNumber(event.target.value), wardId: undefined })
-        }
-      >
-        <option value="">Tất cả quận huyện</option>
-        {districts.data?.content.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </Select>
-      <Select
-        label="Phường / xã"
-        disabled={!value.districtId}
-        value={value.wardId ?? ''}
-        onChange={(event) => onChange({ wardId: optionalNumber(event.target.value) })}
-      >
-        <option value="">Tất cả phường xã</option>
-        {wards.data?.content.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </Select>
+      />
       <div className="grid grid-cols-2 gap-3">
         <Input
           label="Giá từ"

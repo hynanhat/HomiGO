@@ -1,14 +1,17 @@
 package com.batdongsan.service;
 
-import com.batdongsan.dto.location.*;
-import com.batdongsan.entity.District;
-import com.batdongsan.entity.Province;
-import com.batdongsan.entity.Ward;
-import com.batdongsan.exception.ConflictException;
-import com.batdongsan.exception.ResourceNotFoundException;
-import com.batdongsan.repository.DistrictRepository;
-import com.batdongsan.repository.ProvinceRepository;
-import com.batdongsan.repository.WardRepository;
+import com.batdongsan.dto.location.AdministrativeProvinceRes;
+import com.batdongsan.dto.location.CommuneUnitRes;
+import com.batdongsan.entity.AdministrativeCatalogStatus;
+import com.batdongsan.entity.AdministrativeDatasetRelease;
+import com.batdongsan.entity.AdministrativeProvince;
+import com.batdongsan.entity.CommuneUnit;
+import com.batdongsan.exception.ApiException;
+import com.batdongsan.exception.ErrorCode;
+import com.batdongsan.repository.AdministrativeCatalogStateRepository;
+import com.batdongsan.repository.AdministrativeProvinceRepository;
+import com.batdongsan.repository.CommuneUnitRepository;
+import java.util.Objects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,127 +19,73 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LocationService {
-    private final ProvinceRepository provinces;
-    private final DistrictRepository districts;
-    private final WardRepository wards;
+    private final AdministrativeCatalogStateRepository catalogState;
+    private final AdministrativeProvinceRepository provinces;
+    private final CommuneUnitRepository communeUnits;
 
-    public LocationService(ProvinceRepository provinces, DistrictRepository districts, WardRepository wards) {
+    public LocationService(
+            AdministrativeCatalogStateRepository catalogState,
+            AdministrativeProvinceRepository provinces,
+            CommuneUnitRepository communeUnits) {
+        this.catalogState = catalogState;
         this.provinces = provinces;
-        this.districts = districts;
-        this.wards = wards;
+        this.communeUnits = communeUnits;
     }
 
     @Transactional(readOnly = true)
-    public Page<ProvinceRes> getProvinces(Pageable pageable) {
-        return provinces.findAll(pageable).map(ProvinceRes::new);
+    public Page<AdministrativeProvinceRes> getActiveProvinces(Pageable pageable) {
+        return provinces.findByDatasetReleaseAndCatalogStatus(
+                activeRelease(), AdministrativeCatalogStatus.ACTIVE, pageable)
+                .map(AdministrativeProvinceRes::from);
     }
 
     @Transactional(readOnly = true)
-    public Page<DistrictRes> getDistricts(Long provinceId, Pageable pageable) {
-        if (!provinces.existsById(provinceId)) throw new ResourceNotFoundException("Không tìm thấy tỉnh/thành phố.");
-        return districts.findByProvinceId(provinceId, pageable).map(DistrictRes::new);
+    public Page<CommuneUnitRes> getActiveCommuneUnits(String provinceCode, Pageable pageable) {
+        AdministrativeDatasetRelease release = activeRelease();
+        AdministrativeProvince province = activeProvince(release, provinceCode);
+        return communeUnits.findByDatasetReleaseAndAdministrativeProvinceAndCatalogStatus(
+                release, province, AdministrativeCatalogStatus.ACTIVE, pageable)
+                .map(CommuneUnitRes::from);
     }
 
     @Transactional(readOnly = true)
-    public Page<WardRes> getWards(Long districtId, Pageable pageable) {
-        if (!districts.existsById(districtId)) throw new ResourceNotFoundException("Không tìm thấy quận/huyện.");
-        return wards.findByDistrictId(districtId, pageable).map(WardRes::new);
+    public CurrentAddress resolveActiveAddress(String provinceCode, String communeCode) {
+        AdministrativeDatasetRelease release = activeRelease();
+        AdministrativeProvince province = activeProvince(release, provinceCode);
+        CommuneUnit commune = communeUnits.findByDatasetReleaseAndOfficialCodeAndCatalogStatus(
+                        release, communeCode, AdministrativeCatalogStatus.ACTIVE)
+                .orElseGet(() -> {
+                    if (communeUnits.findByDatasetReleaseAndOfficialCode(release, communeCode).isPresent()) {
+                        throw new ApiException(ErrorCode.LOCATION_INACTIVE);
+                    }
+                    throw new ApiException(ErrorCode.LOCATION_NOT_FOUND);
+                });
+        if (!Objects.equals(commune.getAdministrativeProvince().getId(), province.getId())) {
+            throw new ApiException(ErrorCode.LOCATION_RELATION_MISMATCH);
+        }
+        return new CurrentAddress(province, commune);
     }
 
-    @Transactional(readOnly = true)
-    public Page<DistrictRes> getAllDistricts(Pageable pageable) {
-        return districts.findAll(pageable).map(DistrictRes::new);
+    private AdministrativeDatasetRelease activeRelease() {
+        return catalogState.findById((byte) 1)
+                .map(state -> state.getActiveRelease())
+                .filter(Objects::nonNull)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.LOCATION_NOT_FOUND,
+                        "Danh mục địa chỉ hiện hành chưa được kích hoạt."));
     }
 
-    @Transactional(readOnly = true)
-    public Page<WardRes> getAllWards(Pageable pageable) {
-        return wards.findAll(pageable).map(WardRes::new);
+    private AdministrativeProvince activeProvince(
+            AdministrativeDatasetRelease release, String provinceCode) {
+        return provinces.findByDatasetReleaseAndOfficialCodeAndCatalogStatus(
+                        release, provinceCode, AdministrativeCatalogStatus.ACTIVE)
+                .orElseGet(() -> {
+                    if (provinces.findByDatasetReleaseAndOfficialCode(release, provinceCode).isPresent()) {
+                        throw new ApiException(ErrorCode.LOCATION_INACTIVE);
+                    }
+                    throw new ApiException(ErrorCode.LOCATION_NOT_FOUND);
+                });
     }
 
-    @Transactional
-    public ProvinceRes createProvince(ProvinceReq request) {
-        Province province = new Province();
-        province.setName(request.getName().trim());
-        return new ProvinceRes(provinces.save(province));
-    }
-
-    @Transactional
-    public ProvinceRes updateProvince(Long id, ProvinceReq request) {
-        Province province = provinces.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tỉnh/thành phố."));
-        province.setName(request.getName().trim());
-        return new ProvinceRes(provinces.save(province));
-    }
-
-    @Transactional
-    public void deleteProvince(Long id) {
-        Province province = provinces.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tỉnh/thành phố."));
-        provinces.delete(province);
-        provinces.flush();
-    }
-
-    @Transactional
-    public DistrictRes createDistrict(DistrictReq request) {
-        District district = new District();
-        applyDistrict(district, request);
-        return new DistrictRes(districts.save(district));
-    }
-
-    @Transactional
-    public DistrictRes updateDistrict(Long id, DistrictReq request) {
-        District district = districts.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quận/huyện."));
-        applyDistrict(district, request);
-        return new DistrictRes(districts.save(district));
-    }
-
-    @Transactional
-    public void deleteDistrict(Long id) {
-        District district = districts.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quận/huyện."));
-        districts.delete(district);
-        districts.flush();
-    }
-
-    @Transactional
-    public WardRes createWard(WardReq request) {
-        if (wards.existsByCode(request.getCode())) throw new ConflictException("Mã phường/xã đã tồn tại.");
-        Ward ward = new Ward();
-        applyWard(ward, request);
-        return new WardRes(wards.save(ward));
-    }
-
-    @Transactional
-    public WardRes updateWard(Long id, WardReq request) {
-        Ward ward = wards.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã."));
-        if (wards.existsByCodeAndIdNot(request.getCode(), id))
-            throw new ConflictException("Mã phường/xã đã tồn tại.");
-        applyWard(ward, request);
-        return new WardRes(wards.save(ward));
-    }
-
-    @Transactional
-    public void deleteWard(Long id) {
-        Ward ward = wards.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã."));
-        wards.delete(ward);
-        wards.flush();
-    }
-
-    private void applyDistrict(District district, DistrictReq request) {
-        Province province = provinces.findById(request.getProvinceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tỉnh/thành phố."));
-        district.setProvince(province);
-        district.setName(request.getName().trim());
-    }
-
-    private void applyWard(Ward ward, WardReq request) {
-        District district = districts.findById(request.getDistrictId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quận/huyện."));
-        ward.setDistrict(district);
-        ward.setName(request.getName().trim());
-        ward.setCode(request.getCode().trim());
-    }
+    public record CurrentAddress(AdministrativeProvince province, CommuneUnit communeUnit) {}
 }

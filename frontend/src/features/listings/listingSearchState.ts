@@ -9,9 +9,6 @@ export const defaultListingSearchState: ListingSearchState = {
 const sortValues = new Set<ListingSort>(['newest', 'priceAsc', 'priceDesc', 'areaAsc', 'areaDesc'])
 const transactionValues = new Set<TransactionType>(['BUY', 'RENT'])
 const numericKeys = [
-  'provinceId',
-  'districtId',
-  'wardId',
   'categoryId',
   'projectId',
   'minPrice',
@@ -61,7 +58,13 @@ export function parseListingSearchParams(params: URLSearchParams): ListingSearch
       : 'newest',
     page: positiveInteger(params.get('page'), 0),
     size: Math.min(Math.max(positiveInteger(params.get('size'), 12), 1), 100),
+    provinceCode: /^\d{2}$/.test(params.get('provinceCode') ?? '')
+      ? params.get('provinceCode')!
+      : undefined,
   }
+  const communeCode = params.get('communeCode')
+  state.communeCode =
+    state.provinceCode && /^\d{5}$/.test(communeCode ?? '') ? communeCode! : undefined
   for (const key of numericKeys) state[key] = positiveNumber(params.get(key))
   normalizeRange(state, 'minPrice', 'maxPrice')
   normalizeRange(state, 'minArea', 'maxArea')

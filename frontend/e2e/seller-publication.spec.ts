@@ -10,11 +10,11 @@ const baseListing = {
   userId: 1,
   categoryId: 11,
   categoryName: 'Căn hộ',
-  districtId: 32,
-  districtName: 'Thành phố Thủ Đức',
-  provinceName: 'TP. Hồ Chí Minh',
-  wardId: 41,
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   title: 'Căn hộ mới đăng',
   description: 'Mô tả đầy đủ cho căn hộ.',
   price: 5000000000,
@@ -100,11 +100,28 @@ async function mockSellerApi(page: Page) {
     else if (path.endsWith('/categories'))
       data = pageOf([{ id: 11, name: 'Căn hộ', slug: 'can-ho', transactionType: 'BUY' }])
     else if (path.endsWith('/locations/provinces'))
-      data = pageOf([{ id: 21, name: 'TP. Hồ Chí Minh' }])
-    else if (path.includes('/provinces/21/districts'))
-      data = pageOf([{ id: 32, provinceId: 21, name: 'Thành phố Thủ Đức' }])
-    else if (path.includes('/districts/32/wards'))
-      data = pageOf([{ id: 41, districtId: 32, name: 'Phường Thảo Điền', code: 'THAO-DIEN' }])
+      data = pageOf([
+        {
+          code: '79',
+          name: 'Thành phố Hồ Chí Minh',
+          type: 'CENTRAL_MUNICIPALITY',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
+    else if (path.includes('/provinces/79/commune-units'))
+      data = pageOf([
+        {
+          code: '26734',
+          provinceCode: '79',
+          name: 'Phường An Khánh',
+          type: 'WARD',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
     else if (path.endsWith('/projects')) data = pageOf([])
     else if (path.endsWith('/seller/listings') && method === 'POST') {
       status = 'DRAFT'
@@ -155,8 +172,8 @@ test('USER pays through SePay, creates DRAFT, uploads two images and submits PEN
     .getByRole('link', { name: 'Tạo tin mới' })
     .click()
   await page.getByLabel(/Danh mục/).selectOption('11')
-  await page.getByLabel('Tỉnh / thành phố').selectOption('21')
-  await page.getByLabel(/Quận \/ huyện/).selectOption('32')
+  await page.getByLabel('Tỉnh / thành phố').selectOption('79')
+  await page.getByLabel(/Phường \/ xã \/ đặc khu/).selectOption('26734')
   await page.getByLabel(/Tiêu đề/).fill(baseListing.title)
   await page.getByLabel(/Mô tả chi tiết/).fill(baseListing.description)
   await page.getByLabel(/Giá/).fill(String(baseListing.price))

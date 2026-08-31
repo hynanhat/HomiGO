@@ -15,8 +15,8 @@ vi.mock('./AiDescriptionAssistant', () => ({
 
 const validListing: ListingFormValues = {
   categoryId: 11,
-  districtId: 32,
-  wardId: 41,
+  provinceCode: '79',
+  communeCode: '26734',
   projectId: 201,
   title: 'Căn hộ nhiều ánh sáng',
   description: 'Mô tả ban đầu',
@@ -58,11 +58,9 @@ describe('ListingForm', () => {
 
     await screen.findByRole('option', { name: 'Căn hộ' })
     await user.selectOptions(screen.getByLabelText(/^Danh mục/), '12')
-    await user.selectOptions(screen.getByLabelText(/Tỉnh \/ thành phố/), '21')
-    await screen.findByRole('option', { name: 'Thành phố Thủ Đức' })
-    await user.selectOptions(screen.getByLabelText(/^Quận \/ huyện/), '32')
-    await screen.findByRole('option', { name: 'Phường Thảo Điền' })
-    await user.selectOptions(screen.getByLabelText('Phường / xã'), '41')
+    await user.selectOptions(screen.getByLabelText(/Tỉnh \/ thành phố/), '79')
+    await screen.findByRole('option', { name: 'Phường An Khánh' })
+    await user.selectOptions(screen.getByLabelText(/Phường \/ xã \/ đặc khu/), '26734')
     await user.selectOptions(screen.getByLabelText('Dự án'), '201')
 
     await user.clear(screen.getByLabelText(/^Tiêu đề/))
@@ -85,8 +83,8 @@ describe('ListingForm', () => {
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         categoryId: 12,
-        districtId: 32,
-        wardId: 41,
+        provinceCode: '79',
+        communeCode: '26734',
         projectId: 201,
         title: 'Nhà phố đã cập nhật',
         description: 'Mô tả được đề xuất',
@@ -109,7 +107,8 @@ describe('ListingForm', () => {
     await user.click(screen.getByRole('button', { name: 'Lưu bản nháp' }))
 
     expect(await screen.findByText('Vui lòng chọn danh mục.')).toBeInTheDocument()
-    expect(screen.getByText('Vui lòng chọn quận/huyện.')).toBeInTheDocument()
+    expect(screen.getByText('Vui lòng chọn tỉnh/thành phố.')).toBeInTheDocument()
+    expect(screen.getByText('Vui lòng chọn phường/xã/đặc khu.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập tiêu đề.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập mô tả.')).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()

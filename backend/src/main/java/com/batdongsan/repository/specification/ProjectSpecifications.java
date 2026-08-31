@@ -10,7 +10,8 @@ public final class ProjectSpecifications {
 
     public static Specification<Project> from(ProjectFilter filter) {
         return Specification.where(keyword(filter.getKeyword()))
-                .and(district(filter.getDistrictId()))
+                .and(province(filter.getProvinceCode()))
+                .and(commune(filter.getCommuneCode()))
                 .and(status(filter.getStatus()));
     }
 
@@ -25,9 +26,16 @@ public final class ProjectSpecifications {
         };
     }
 
-    private static Specification<Project> district(Long districtId) {
-        return (root, query, cb) -> districtId == null
-                ? cb.conjunction() : cb.equal(root.get("district").get("id"), districtId);
+    private static Specification<Project> province(String provinceCode) {
+        return (root, query, cb) -> provinceCode == null
+                ? cb.conjunction()
+                : cb.equal(root.get("administrativeProvince").get("officialCode"), provinceCode);
+    }
+
+    private static Specification<Project> commune(String communeCode) {
+        return (root, query, cb) -> communeCode == null
+                ? cb.conjunction()
+                : cb.equal(root.get("communeUnit").get("officialCode"), communeCode);
     }
 
     private static Specification<Project> status(String status) {

@@ -11,7 +11,8 @@ describe('frontend regression guardrails', () => {
     const listing = listingFixtures[0]
     expect(listing.publicCode).toMatch(/^HMG-/)
     expect(listing.categoryId).toBeTypeOf('number')
-    expect(listing.districtId).toBeTypeOf('number')
+    expect(listing.provinceCode).toMatch(/^\d{2}$/)
+    expect(listing.communeCode).toMatch(/^\d{5}$/)
   })
 
   it('normalizes reversed price, area and coordinate ranges from shared URLs', () => {

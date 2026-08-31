@@ -9,8 +9,11 @@ const listing = {
   description: 'Tin đang hoạt động.',
   categoryName: 'Căn hộ',
   projectName: 'Homi Riverside',
-  provinceName: 'TP. Hồ Chí Minh',
-  districtName: 'Thành phố Thủ Đức',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   price: 5800000000,
   area: 82,
@@ -28,10 +31,11 @@ const project = {
   name: 'Homi Riverside',
   slug: 'homi-riverside',
   investor: 'Homi Group',
-  districtId: 32,
-  districtName: 'Thành phố Thủ Đức',
-  wardId: 41,
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   status: 'IN_PROGRESS',
   priceFrom: 4500000000,
@@ -69,9 +73,29 @@ async function mockProjects(page: Page) {
     if (path.endsWith('/projects/homi-riverside'))
       data = { ...project, description: 'Dự án ven sông hiện đại.', listings: pageOf([listing]) }
     else if (path.endsWith('/projects')) data = pageOf([project])
-    else if (path.endsWith('/provinces')) data = pageOf([{ id: 21, name: 'TP. Hồ Chí Minh' }])
-    else if (path.includes('/districts'))
-      data = pageOf([{ id: 32, provinceId: 21, name: 'Thành phố Thủ Đức' }])
+    else if (path.endsWith('/provinces'))
+      data = pageOf([
+        {
+          code: '79',
+          name: 'Thành phố Hồ Chí Minh',
+          type: 'CENTRAL_MUNICIPALITY',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
+    else if (path.includes('/provinces/79/commune-units'))
+      data = pageOf([
+        {
+          code: '26734',
+          provinceCode: '79',
+          name: 'Phường An Khánh',
+          type: 'WARD',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

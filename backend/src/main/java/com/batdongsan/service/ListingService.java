@@ -17,23 +17,24 @@ import java.util.*;
 public class ListingService {
     private final ListingRepository listings;
     private final CategoryRepository categories;
-    private final DistrictRepository districts;
-    private final WardRepository wards;
     private final ProjectRepository projects;
     private final UserRepository users;
     private final SavedListingRepository savedListings;
     private final ListingStatusHistoryRepository histories;
     private final ApplicationEventPublisher eventPublisher;
     private final NotificationService notificationService;
+    private final LocationService locationService;
 
-    public ListingService(ListingRepository listings, CategoryRepository categories, DistrictRepository districts,
-                          WardRepository wards, ProjectRepository projects, UserRepository users,
+    public ListingService(ListingRepository listings, CategoryRepository categories,
+                          ProjectRepository projects, UserRepository users,
                           SavedListingRepository savedListings, ListingStatusHistoryRepository histories,
-                          ApplicationEventPublisher eventPublisher, NotificationService notificationService) {
-        this.listings= listings; this.categories=categories; this.districts=districts; this.wards=wards;
+                          ApplicationEventPublisher eventPublisher, NotificationService notificationService,
+                          LocationService locationService) {
+        this.listings= listings; this.categories=categories;
         this.projects=projects; this.users=users; this.savedListings=savedListings; this.histories=histories;
         this.eventPublisher=eventPublisher;
         this.notificationService=notificationService;
+        this.locationService=locationService;
     }
 
     @Transactional
@@ -123,15 +124,16 @@ public class ListingService {
 
     private void apply(Listing listing,ListingReq request){Category category=categories.findById(request.getCategoryId())
             .orElseThrow(()->new ResourceNotFoundException("Không tìm thấy danh mục."));
-        District district=districts.findById(request.getDistrictId()).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy quận/huyện."));
-        Ward ward=request.getWardId()==null?null:wards.findById(request.getWardId()).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy phường/xã."));
-        if(ward!=null&&!Objects.equals(ward.getDistrict().getId(),district.getId()))throw new BadRequestException("Phường/xã không thuộc quận/huyện đã chọn.");
+        LocationService.CurrentAddress currentAddress = locationService.resolveActiveAddress(
+                request.getProvinceCode(), request.getCommuneCode());
         Project project=request.getProjectId()==null?null:projects.findById(request.getProjectId()).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy dự án."));
-        if(project!=null&&!Objects.equals(project.getDistrict().getId(),district.getId()))
-            throw new BadRequestException("Dự án không thuộc quận/huyện đã chọn.");
-        if(project!=null&&project.getWard()!=null&&ward!=null&&!Objects.equals(project.getWard().getId(),ward.getId()))
-            throw new BadRequestException("Dự án không thuộc phường/xã đã chọn.");
-        listing.setCategory(category);listing.setDistrict(district);listing.setWard(ward);listing.setProject(project);
+        if(project!=null&&(project.getAdministrativeProvince()==null||project.getCommuneUnit()==null
+                ||!Objects.equals(project.getAdministrativeProvince().getId(),currentAddress.province().getId())
+                ||!Objects.equals(project.getCommuneUnit().getId(),currentAddress.communeUnit().getId())))
+            throw new ApiException(ErrorCode.LOCATION_RELATION_MISMATCH,"Dự án không thuộc địa chỉ đã chọn.");
+        listing.setCategory(category);listing.setProject(project);
+        listing.setAdministrativeProvince(currentAddress.province());
+        listing.setCommuneUnit(currentAddress.communeUnit());
         listing.setTitle(request.getTitle().trim());listing.setDescription(request.getDescription().trim());listing.setPrice(request.getPrice());
         listing.setArea(request.getArea());listing.setAddress(request.getAddress().trim());listing.setLatitude(request.getLatitude());
         listing.setLongitude(request.getLongitude());listing.setBedrooms(request.getBedrooms());listing.setBathrooms(request.getBathrooms());

@@ -2,6 +2,7 @@ package com.batdongsan.e2e;
 
 import com.batdongsan.entity.*;
 import com.batdongsan.repository.*;
+import com.batdongsan.support.CurrentLocationTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 class AdminModerationFlowIntegrationTest {
-    @Autowired MockMvc mvc; @Autowired UserRepository users; @Autowired ProvinceRepository provinces;
-    @Autowired DistrictRepository districts; @Autowired CategoryRepository categories; @Autowired ListingRepository listings;
+    @Autowired MockMvc mvc; @Autowired UserRepository users;
+    @Autowired AdministrativeDatasetReleaseRepository releases; @Autowired AdministrativeCatalogStateRepository catalogStates;
+    @Autowired AdministrativeProvinceRepository provinces; @Autowired CommuneUnitRepository communes;
+    @Autowired CategoryRepository categories; @Autowired ListingRepository listings;
     @Autowired RefreshTokenRepository refreshTokens; @Autowired ListingStatusHistoryRepository histories;
     private User seller; private Listing pending; private Listing rejectedCandidate;
 
@@ -34,11 +37,10 @@ class AdminModerationFlowIntegrationTest {
     void seed() {
         User admin=user("admin@homigo.test",UserRole.ADMIN);users.save(admin);
         seller=users.save(user("seller@homigo.test",UserRole.SELLER));
-        Province province=new Province();province.setName("TP.HCM");province=provinces.save(province);
-        District district=new District();district.setName("Quận 1");district.setProvince(province);district=districts.save(district);
+        var location=CurrentLocationTestData.seed("moderation-current", releases, catalogStates, provinces, communes);
         Category category=new Category();category.setName("Căn hộ");category.setSlug("can-ho-admin-e2e");category.setTransactionType(TransactionType.BUY);category=categories.save(category);
-        pending=listings.save(listing("HMG-ADMIN-001","Tin chờ duyệt",district,category));
-        rejectedCandidate=listings.save(listing("HMG-ADMIN-002","Tin cần từ chối",district,category));
+        pending=listings.save(listing("HMG-ADMIN-001","Tin chờ duyệt",location,category));
+        rejectedCandidate=listings.save(listing("HMG-ADMIN-002","Tin cần từ chối",location,category));
     }
 
     @Test
@@ -88,8 +90,9 @@ class AdminModerationFlowIntegrationTest {
 
     private User user(String email,UserRole role){User user=new User();user.setName(role.name());user.setEmail(email);
         user.setPasswordHash("hash");user.setRole(role);user.setStatus(UserStatus.ACTIVE);return user;}
-    private Listing listing(String code,String title,District district,Category category){Listing listing=new Listing();listing.setPublicCode(code);
-        listing.setUser(seller);listing.setCategory(category);listing.setDistrict(district);listing.setTitle(title);listing.setDescription("Mô tả đầy đủ");
+    private Listing listing(String code,String title,CurrentLocationTestData.Address location,Category category){Listing listing=new Listing();listing.setPublicCode(code);
+        listing.setUser(seller);listing.setCategory(category);listing.setAdministrativeProvince(location.province());
+        listing.setCommuneUnit(location.commune());listing.setTitle(title);listing.setDescription("Mô tả đầy đủ");
         listing.setPrice(BigDecimal.valueOf(2_000_000_000L));listing.setArea(80.0);listing.setAddress("123 Nguyễn Huệ");
         listing.setContactName("Seller");listing.setContactPhone("0901234567");listing.setStatus(ListingStatus.PENDING);return listing;}
 }

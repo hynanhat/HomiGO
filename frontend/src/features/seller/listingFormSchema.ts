@@ -3,8 +3,8 @@ import { z } from 'zod'
 const optionalNonNegative = z.number().int().min(0).optional()
 export const listingFormSchema = z.object({
   categoryId: z.number().int().positive('Vui lòng chọn danh mục.'),
-  districtId: z.number().int().positive('Vui lòng chọn quận/huyện.'),
-  wardId: z.number().int().positive().optional(),
+  provinceCode: z.string().regex(/^\d{2}$/, 'Vui lòng chọn tỉnh/thành phố.'),
+  communeCode: z.string().regex(/^\d{5}$/, 'Vui lòng chọn phường/xã/đặc khu.'),
   projectId: z.number().int().positive().optional(),
   title: z.string().trim().min(1, 'Vui lòng nhập tiêu đề.').max(200),
   description: z.string().trim().min(1, 'Vui lòng nhập mô tả.').max(10_000),

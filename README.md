@@ -95,12 +95,42 @@ npm run dev
 
 Ứng dụng: `http://localhost:5173`. Xem [frontend/README.md](frontend/README.md) để biết route, account và toàn bộ lệnh kiểm thử.
 
-## Tài khoản và dữ liệu demo
+## Khởi tạo dữ liệu production
 
-- Đăng ký qua UI tạo `USER`.
-- `USER` thanh toán một lần qua SePay Sandbox tại `/seller/upgrade`; chỉ IPN hợp lệ mới nâng quyền thành `SELLER`.
-- `ADMIN` không có credential mặc định và phải được bootstrap trong môi trường local/seed có kiểm soát.
-- Trước demo, admin cần tạo category/location/project; seller tạo rồi submit tin; admin approve để tin xuất hiện ở public search.
+HomiGO không tạo user, dự án, tin đăng hoặc giao dịch mẫu. Bản triển khai mới chỉ đóng gói hai catalog tham chiếu có phiên bản:
+
+- `vn-administrative-units-2025-07-01`: 34 tỉnh/thành phố và 3.321 phường/xã/đặc khu theo Quyết định 19/2025/QĐ-TTg.
+- `categories-v1`: 16 danh mục mua bán/cho thuê dùng cho production.
+
+Migration `V10` là clean cutover: nó tự dừng nếu `listings` hoặc `projects` có dữ liệu; nếu hai bảng trống, nó xóa cấu trúc `provinces/districts/wards` cũ và chuyển hẳn sang địa chỉ hai cấp. Không chỉnh sửa các migration `V1`–`V9` đã chạy.
+
+Sau khi deploy, đăng ký tài khoản thật qua UI. Nâng đúng tài khoản đó thành admin bằng MySQL tương tác (thay email trong câu `UPDATE`):
+
+```bash
+cd /opt/homigo
+sudo docker compose exec db sh
+mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
+```
+
+Tại dấu nhắc `mysql>`, chạy từng câu riêng biệt:
+
+```sql
+SELECT id, name, email, role, status FROM users ORDER BY id;
+UPDATE users SET role = 'ADMIN', status = 'ACTIVE'
+WHERE email = 'email-that-cua-ban@example.com';
+SELECT ROW_COUNT() AS changed_rows;
+SELECT id, name, email, role, status
+FROM users WHERE email = 'email-that-cua-ban@example.com';
+EXIT;
+```
+
+Gõ `exit` thêm một lần để rời shell container, đăng xuất rồi đăng nhập lại để JWT nhận role mới. Mở `/admin/locations` và thực hiện theo thứ tự:
+
+1. **Kiểm tra bộ dữ liệu chính thức** — xác minh checksum, mã, quan hệ cha và số lượng 34/3.321.
+2. **Kích hoạt bộ dữ liệu** — nhập catalog đã xác minh và đặt nó thành bản hiện hành.
+3. **Khởi tạo 16 danh mục production** — thao tác idempotent, chạy lại không tạo bản ghi trùng.
+
+Project và listing thật được tạo qua các màn quản trị/người bán sau bước này; chúng không nằm trong bootstrap.
 
 ## Chức năng nâng cao
 
@@ -132,6 +162,23 @@ docker compose up --build
 ```
 
 Ứng dụng mở tại `http://localhost` (hoặc `HTTP_PORT` đã cấu hình). Compose có healthcheck, SPA fallback/proxy API, volume bền vững cho MySQL và ảnh upload. Khi triển khai public qua HTTPS, đặt `AUTH_COOKIE_SECURE=true`; không công khai trực tiếp port backend/database.
+
+Trên VPS tại `/opt/homigo`, deploy và kiểm tra bằng:
+
+```bash
+cd /opt/homigo
+sudo docker compose up -d --build
+sudo docker compose ps
+curl -fsS http://127.0.0.1:8080/healthz
+sudo docker inspect homigo-frontend-1 --format '{{.State.Health.Status}}'
+sudo docker inspect homigo-backend-1 --format '{{.State.Health.Status}}'
+```
+
+Frontend healthcheck dùng rõ `127.0.0.1` trong container để tránh trường hợp `localhost` phân giải sang IPv6 trong khi Nginx chỉ nghe IPv4. Khi đã kích hoạt catalog, kiểm tra số lượng qua reverse proxy:
+
+```bash
+curl -fsS 'http://127.0.0.1:8080/api/v1/locations/provinces?page=0&size=100'
+```
 
 ## Kiểm tra release
 

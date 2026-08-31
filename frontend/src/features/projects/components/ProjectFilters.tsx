@@ -1,5 +1,5 @@
 import { Input, Select } from '@/components/ui'
-import { useDistricts, useProvinces } from '@/features/locations/locationQueries'
+import { TwoLevelLocationFields } from '@/components/location/TwoLevelLocationFields'
 import type { ProjectSearchState } from '@/types/domain'
 
 export function ProjectFilters({
@@ -9,14 +9,10 @@ export function ProjectFilters({
   value: ProjectSearchState
   onChange: (updates: Partial<ProjectSearchState>) => void
 }) {
-  const provinces = useProvinces()
-  const firstProvinceId = provinces.data?.content[0]?.id
-  const districts = useDistricts(firstProvinceId)
-
   return (
     <section
       aria-label="Bộ lọc dự án"
-      className="grid gap-4 rounded-3xl border border-brand-100 bg-white/85 p-5 shadow-[var(--shadow-card)] backdrop-blur md:grid-cols-3"
+      className="grid gap-4 rounded-3xl border border-brand-100 bg-white/85 p-5 shadow-[var(--shadow-card)] backdrop-blur md:grid-cols-4"
     >
       <Input
         label="Từ khóa"
@@ -24,20 +20,19 @@ export function ProjectFilters({
         value={value.keyword ?? ''}
         onChange={(event) => onChange({ keyword: event.target.value || undefined })}
       />
-      <Select
-        label="Quận / huyện"
-        value={value.districtId ?? ''}
-        onChange={(event) =>
-          onChange({ districtId: event.target.value ? Number(event.target.value) : undefined })
+      <TwoLevelLocationFields
+        required={false}
+        className="grid gap-4 md:col-span-2 md:grid-cols-2"
+        value={value}
+        provinceEmptyLabel="Tất cả tỉnh/thành phố"
+        communeEmptyLabel="Tất cả phường/xã/đặc khu"
+        onChange={(location) =>
+          onChange({
+            provinceCode: location.provinceCode,
+            communeCode: location.communeCode,
+          })
         }
-      >
-        <option value="">Tất cả khu vực</option>
-        {districts.data?.content.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </Select>
+      />
       <Select
         label="Tiến độ"
         value={value.status ?? ''}

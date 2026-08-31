@@ -23,27 +23,36 @@ class LocationControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void anonymousUserCanBrowsePaginatedLocationHierarchy() throws Exception {
-        mockMvc.perform(get("/api/v1/locations/provinces"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.content[0].name").value("TP.HCM"));
-
-        mockMvc.perform(get("/api/v1/locations/provinces/1301/districts"))
+    void anonymousUserCanBrowsePaginatedCurrentLocationHierarchy() throws Exception {
+        mockMvc.perform(get("/api/v1/locations/provinces").param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.content[0].provinceId").value(1301));
+                .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.content.length()").value(1));
 
-        mockMvc.perform(get("/api/v1/locations/districts/1312/wards"))
+        mockMvc.perform(get("/api/v1/locations/provinces/79/commune-units"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.content[0].code").value("PROJECT-THAO-DIEN"));
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].provinceCode").value("79"));
+    }
+
+    @Test
+    void inactiveUnitsAreHiddenAndRejectedForNewAddresses() throws Exception {
+        mockMvc.perform(get("/api/v1/locations/provinces/99/commune-units"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("LOCATION_INACTIVE"));
+
+        mockMvc.perform(get("/api/v1/locations/provinces/79/commune-units"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[?(@.code == '99998')]").isEmpty());
     }
 
     @Test
     void unknownParentReturnsNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/locations/provinces/999999/districts"))
+        mockMvc.perform(get("/api/v1/locations/provinces/98/commune-units"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"));
+                .andExpect(jsonPath("$.errorCode").value("LOCATION_NOT_FOUND"));
     }
+
 }

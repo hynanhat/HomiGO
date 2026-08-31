@@ -9,10 +9,11 @@ public class ProjectSummaryRes {
     private final String name;
     private final String slug;
     private final String investor;
-    private final Long districtId;
-    private final String districtName;
-    private final Long wardId;
-    private final String wardName;
+    private final String provinceCode;
+    private final String provinceName;
+    private final String communeCode;
+    private final String communeName;
+    private final String communeType;
     private final String address;
     private final String description;
     private final Double latitude;
@@ -27,10 +28,11 @@ public class ProjectSummaryRes {
         name = project.getName();
         slug = project.getSlug();
         investor = project.getInvestor();
-        districtId = project.getDistrict().getId();
-        districtName = project.getDistrict().getName();
-        wardId = project.getWard() == null ? null : project.getWard().getId();
-        wardName = project.getWard() == null ? null : project.getWard().getName();
+        provinceCode = project.getAdministrativeProvince().getOfficialCode();
+        provinceName = project.getAdministrativeProvince().getOfficialName();
+        communeCode = project.getCommuneUnit().getOfficialCode();
+        communeName = project.getCommuneUnit().getOfficialName();
+        communeType = project.getCommuneUnit().getUnitType().name();
         address = project.getAddress();
         description = project.getDescription();
         latitude = project.getLatitude();
@@ -45,10 +47,11 @@ public class ProjectSummaryRes {
     public String getName() { return name; }
     public String getSlug() { return slug; }
     public String getInvestor() { return investor; }
-    public Long getDistrictId() { return districtId; }
-    public String getDistrictName() { return districtName; }
-    public Long getWardId() { return wardId; }
-    public String getWardName() { return wardName; }
+    public String getProvinceCode() { return provinceCode; }
+    public String getProvinceName() { return provinceName; }
+    public String getCommuneCode() { return communeCode; }
+    public String getCommuneName() { return communeName; }
+    public String getCommuneType() { return communeType; }
     public String getAddress() { return address; }
     public String getDescription() { return description; }
     public Double getLatitude() { return latitude; }

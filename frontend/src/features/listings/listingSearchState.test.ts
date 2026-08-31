@@ -21,9 +21,9 @@ describe('listingSearchState', () => {
 
   it('falls back for invalid sort, page, size and numeric values', () => {
     const state = parseListingSearchParams(
-      new URLSearchParams('sort=random&page=-2&size=500&provinceId=oops'),
+      new URLSearchParams('sort=random&page=-2&size=500&provinceCode=oops'),
     )
-    expect(state).toMatchObject({ sort: 'newest', page: 0, size: 100, provinceId: undefined })
+    expect(state).toMatchObject({ sort: 'newest', page: 0, size: 100, provinceCode: undefined })
   })
 
   it('resets page when a filter changes but preserves explicit pagination', () => {
@@ -34,9 +34,9 @@ describe('listingSearchState', () => {
 
   it('serializes URL-backed state', () => {
     expect(
-      serializeListingSearchState({ sort: 'newest', page: 0, size: 12, districtId: 32 }).get(
-        'districtId',
+      serializeListingSearchState({ sort: 'newest', page: 0, size: 12, communeCode: '26734' }).get(
+        'communeCode',
       ),
-    ).toBe('32')
+    ).toBe('26734')
   })
 })

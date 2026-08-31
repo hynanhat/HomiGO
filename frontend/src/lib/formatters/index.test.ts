@@ -18,16 +18,20 @@ describe('Vietnamese formatters', () => {
     expect(formatDate('not-a-date')).toBe('—')
   })
 
-  it('builds a compact address without empty or duplicate segments', () => {
+  it('builds a compact two-level address without empty or duplicate segments', () => {
     expect(
       formatAddress({
         address: '12 Nguyễn Huệ',
-        wardName: 'Bến Nghé',
-        districtName: 'Quận 1',
-        provinceName: 'TP.HCM',
+        communeName: 'Phường Sài Gòn',
+        provinceName: 'Thành phố Hồ Chí Minh',
       }),
-    ).toBe('12 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM')
-    expect(formatAddress({ districtName: 'Quận 1', provinceName: 'Quận 1' })).toBe('Quận 1')
+    ).toBe('12 Nguyễn Huệ, Phường Sài Gòn, Thành phố Hồ Chí Minh')
+    expect(
+      formatAddress({
+        communeName: 'Thành phố Huế',
+        provinceName: 'Thành phố Huế',
+      }),
+    ).toBe('Thành phố Huế')
   })
 
   it('translates project statuses', () => {

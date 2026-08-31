@@ -2,8 +2,8 @@ import type { Listing } from '@/types/domain'
 
 export interface ListingFormValues {
   categoryId: number
-  districtId: number
-  wardId?: number
+  provinceCode: string
+  communeCode: string
   projectId?: number
   title: string
   description: string

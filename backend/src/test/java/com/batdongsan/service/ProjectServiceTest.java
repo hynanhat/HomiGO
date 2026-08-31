@@ -30,16 +30,18 @@ class ProjectServiceTest {
     private MockMvc mockMvc;
 
     @Test
-    void filtersProjectsByDistrictAndStatusWithoutReturningEntities() {
+    void filtersProjectsByCurrentLocationAndStatusWithoutReturningEntities() {
         ProjectFilter filter = new ProjectFilter();
-        filter.setDistrictId(1311L);
+        filter.setProvinceCode("79");
+        filter.setCommuneCode("26734");
         filter.setStatus("IN_PROGRESS");
 
         var page = projectService.getProjects(filter, PageRequest.of(0, 10));
 
         assertEquals(1, page.getTotalElements());
         assertEquals("riverside-residence", page.getContent().get(0).getSlug());
-        assertEquals("Quận 1", page.getContent().get(0).getDistrictName());
+        assertEquals("Thành phố Hồ Chí Minh", page.getContent().get(0).getProvinceName());
+        assertEquals("Phường Bến Nghé", page.getContent().get(0).getCommuneName());
         assertEquals("Dự án ven sông trung tâm.", page.getContent().get(0).getDescription());
         assertEquals(10.775, page.getContent().get(0).getLatitude());
         assertEquals(106.700, page.getContent().get(0).getLongitude());
@@ -48,7 +50,8 @@ class ProjectServiceTest {
     @Test
     void publicApiIsPaginatedAndFilterable() throws Exception {
         mockMvc.perform(get("/api/v1/projects")
-                        .param("districtId", "1311")
+                        .param("provinceCode", "79")
+                        .param("communeCode", "26734")
                         .param("status", "COMPLETED")
                         .param("page", "0")
                         .param("size", "1"))

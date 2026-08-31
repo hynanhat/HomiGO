@@ -30,7 +30,7 @@ describe('public listing discovery', () => {
       </Routes>,
     )
     fireEvent.click(screen.getByRole('button', { name: /Thuê/ }))
-    fireEvent.change(screen.getByLabelText('Tìm bất động sản'), { target: { value: 'Thảo Điền' } })
+    fireEvent.change(screen.getByLabelText('Tìm bất động sản'), { target: { value: 'An Khánh' } })
     fireEvent.click(screen.getByRole('button', { name: /Tìm kiếm/ }))
     expect(await screen.findByText('Kết quả điều hướng')).toBeInTheDocument()
   })
@@ -53,7 +53,7 @@ describe('public listing discovery', () => {
   })
 
   it('shows URL filters, result count and mobile filter drawer', async () => {
-    renderPage(<ListingPage />, ['/listings?transactionType=BUY&provinceId=21'])
+    renderPage(<ListingPage />, ['/listings?transactionType=BUY&provinceCode=79'])
     expect(await screen.findByText('1 kết quả')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Bộ lọc' }))
     expect(screen.getByRole('dialog', { name: 'Bộ lọc tìm kiếm' })).toBeInTheDocument()

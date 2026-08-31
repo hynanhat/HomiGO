@@ -2,6 +2,7 @@ package com.batdongsan.controller;
 
 import com.batdongsan.entity.*;
 import com.batdongsan.repository.*;
+import com.batdongsan.support.CurrentLocationTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,10 @@ class ListingAnalyticsControllerIntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired UserRepository users;
     @Autowired CategoryRepository categories;
-    @Autowired ProvinceRepository provinces;
-    @Autowired DistrictRepository districts;
+    @Autowired AdministrativeDatasetReleaseRepository releases;
+    @Autowired AdministrativeCatalogStateRepository catalogStates;
+    @Autowired AdministrativeProvinceRepository provinces;
+    @Autowired CommuneUnitRepository communes;
     @Autowired ListingRepository listings;
 
     private Listing listing;
@@ -44,11 +47,12 @@ class ListingAnalyticsControllerIntegrationTest {
         saveUser("analytics-other@homigo.test", UserRole.SELLER);
         Category category = new Category(); category.setName("Căn hộ"); category.setSlug("analytics-can-ho");
         category.setTransactionType(TransactionType.BUY); category = categories.save(category);
-        Province province = new Province(); province.setName("TP. Hồ Chí Minh"); province = provinces.save(province);
-        District district = new District(); district.setName("Quận 1"); district.setProvince(province); district = districts.save(district);
+        var location = CurrentLocationTestData.seed(
+                "analytics-current", releases, catalogStates, provinces, communes);
 
         listing = new Listing(); listing.setPublicCode("HMG-ANALYTICS01"); listing.setUser(owner);
-        listing.setCategory(category); listing.setDistrict(district); listing.setTitle("Căn hộ thống kê");
+        listing.setCategory(category); listing.setAdministrativeProvince(location.province());
+        listing.setCommuneUnit(location.commune()); listing.setTitle("Căn hộ thống kê");
         listing.setDescription("Mô tả đầy đủ"); listing.setPrice(BigDecimal.valueOf(3_000_000_000L));
         listing.setArea(70.0); listing.setAddress("1 Nguyễn Huệ"); listing.setContactName("Chủ tin");
         listing.setContactPhone("0901234567"); listing.setStatus(ListingStatus.ACTIVE);

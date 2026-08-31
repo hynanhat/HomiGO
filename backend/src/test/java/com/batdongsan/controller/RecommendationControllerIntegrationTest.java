@@ -2,6 +2,7 @@ package com.batdongsan.controller;
 
 import com.batdongsan.entity.*;
 import com.batdongsan.repository.*;
+import com.batdongsan.support.CurrentLocationTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,10 @@ class RecommendationControllerIntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired UserRepository users;
     @Autowired CategoryRepository categories;
-    @Autowired ProvinceRepository provinces;
-    @Autowired DistrictRepository districts;
+    @Autowired AdministrativeDatasetReleaseRepository releases;
+    @Autowired AdministrativeCatalogStateRepository catalogStates;
+    @Autowired AdministrativeProvinceRepository provinces;
+    @Autowired CommuneUnitRepository communes;
     @Autowired ListingRepository listings;
 
     private Listing target;
@@ -38,10 +41,10 @@ class RecommendationControllerIntegrationTest {
         seller.setPasswordHash("hash"); seller.setRole(UserRole.SELLER); seller.setStatus(UserStatus.ACTIVE); seller = users.save(seller);
         Category category = new Category(); category.setName("Nhà phố"); category.setSlug("recommend-nha-pho");
         category.setTransactionType(TransactionType.BUY); category = categories.save(category);
-        Province province = new Province(); province.setName("Đà Nẵng"); province = provinces.save(province);
-        District district = new District(); district.setName("Hải Châu"); district.setProvince(province); district = districts.save(district);
-        target = listing("HMG-RECOMMEND01", seller, category, district, 5_000_000_000L); target = listings.save(target);
-        listings.save(listing("HMG-RECOMMEND02", seller, category, district, 5_200_000_000L));
+        var location = CurrentLocationTestData.seed(
+                "recommend-current", releases, catalogStates, provinces, communes);
+        target = listing("HMG-RECOMMEND01", seller, category, location, 5_000_000_000L); target = listings.save(target);
+        listings.save(listing("HMG-RECOMMEND02", seller, category, location, 5_200_000_000L));
     }
 
     @Test
@@ -61,9 +64,11 @@ class RecommendationControllerIntegrationTest {
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
-    private Listing listing(String code, User seller, Category category, District district, long price) {
+    private Listing listing(String code, User seller, Category category,
+                            CurrentLocationTestData.Address location, long price) {
         Listing listing = new Listing(); listing.setPublicCode(code); listing.setUser(seller); listing.setCategory(category);
-        listing.setDistrict(district); listing.setTitle("Tin " + code); listing.setDescription("Mô tả đầy đủ");
+        listing.setAdministrativeProvince(location.province()); listing.setCommuneUnit(location.commune());
+        listing.setTitle("Tin " + code); listing.setDescription("Mô tả đầy đủ");
         listing.setPrice(BigDecimal.valueOf(price)); listing.setArea(90.0); listing.setAddress("Địa chỉ");
         listing.setContactName("Seller"); listing.setContactPhone("0901234567"); listing.setStatus(ListingStatus.ACTIVE);
         listing.setPublishedAt(LocalDateTime.now()); listing.setExpiresAt(LocalDateTime.now().plusDays(30)); return listing;

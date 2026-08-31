@@ -21,7 +21,8 @@ class ListingRepositoryContractTest {
 
         assertNotNull(graph);
         List<String> paths = List.of(graph.attributePaths());
-        assertTrue(paths.containsAll(List.of("user", "category", "district", "district.province", "ward", "project")));
+        assertTrue(paths.containsAll(List.of(
+                "user", "category", "administrativeProvince", "communeUnit", "project")));
         assertFalse(paths.contains("images"));
     }
 

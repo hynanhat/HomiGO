@@ -1,0 +1,21 @@
+{
+  "version": "categories-v1",
+  "categories": [
+    { "slug": "can-ho-ban", "name": "Căn hộ bán", "transactionType": "BUY" },
+    { "slug": "nha-rieng-ban", "name": "Nhà riêng bán", "transactionType": "BUY" },
+    { "slug": "nha-mat-pho-ban", "name": "Nhà mặt phố bán", "transactionType": "BUY" },
+    { "slug": "biet-thu-ban", "name": "Biệt thự bán", "transactionType": "BUY" },
+    { "slug": "dat-nen-ban", "name": "Đất nền bán", "transactionType": "BUY" },
+    { "slug": "dat-tho-cu-ban", "name": "Đất thổ cư bán", "transactionType": "BUY" },
+    { "slug": "shophouse-ban", "name": "Shophouse bán", "transactionType": "BUY" },
+    { "slug": "kho-xuong-ban", "name": "Kho, xưởng bán", "transactionType": "BUY" },
+    { "slug": "can-ho-cho-thue", "name": "Căn hộ cho thuê", "transactionType": "RENT" },
+    { "slug": "nha-rieng-cho-thue", "name": "Nhà riêng cho thuê", "transactionType": "RENT" },
+    { "slug": "nha-mat-pho-cho-thue", "name": "Nhà mặt phố cho thuê", "transactionType": "RENT" },
+    { "slug": "biet-thu-cho-thue", "name": "Biệt thự cho thuê", "transactionType": "RENT" },
+    { "slug": "phong-tro-cho-thue", "name": "Phòng trọ cho thuê", "transactionType": "RENT" },
+    { "slug": "van-phong-cho-thue", "name": "Văn phòng cho thuê", "transactionType": "RENT" },
+    { "slug": "mat-bang-cho-thue", "name": "Mặt bằng cho thuê", "transactionType": "RENT" },
+    { "slug": "kho-xuong-cho-thue", "name": "Kho, xưởng cho thuê", "transactionType": "RENT" }
+  ]
+}

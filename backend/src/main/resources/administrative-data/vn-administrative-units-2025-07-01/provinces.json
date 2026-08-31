@@ -1,0 +1,206 @@
+[
+  {
+    "code": "01",
+    "name": "Thành phố Hà Nội",
+    "type": "CENTRAL_MUNICIPALITY",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "04",
+    "name": "Tỉnh Cao Bằng",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "08",
+    "name": "Tỉnh Tuyên Quang",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "11",
+    "name": "Tỉnh Điện Biên",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "12",
+    "name": "Tỉnh Lai Châu",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "14",
+    "name": "Tỉnh Sơn La",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "15",
+    "name": "Tỉnh Lào Cai",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "19",
+    "name": "Tỉnh Thái Nguyên",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "20",
+    "name": "Tỉnh Lạng Sơn",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "22",
+    "name": "Tỉnh Quảng Ninh",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "24",
+    "name": "Tỉnh Bắc Ninh",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "25",
+    "name": "Tỉnh Phú Thọ",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "31",
+    "name": "Thành phố Hải Phòng",
+    "type": "CENTRAL_MUNICIPALITY",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "33",
+    "name": "Tỉnh Hưng Yên",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "37",
+    "name": "Tỉnh Ninh Bình",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "38",
+    "name": "Tỉnh Thanh Hóa",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "40",
+    "name": "Tỉnh Nghệ An",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "42",
+    "name": "Tỉnh Hà Tĩnh",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "44",
+    "name": "Tỉnh Quảng Trị",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "46",
+    "name": "Thành phố Huế",
+    "type": "CENTRAL_MUNICIPALITY",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "48",
+    "name": "Thành phố Đà Nẵng",
+    "type": "CENTRAL_MUNICIPALITY",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "51",
+    "name": "Tỉnh Quảng Ngãi",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "52",
+    "name": "Tỉnh Gia Lai",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "56",
+    "name": "Tỉnh Khánh Hòa",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "66",
+    "name": "Tỉnh Đắk Lắk",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "68",
+    "name": "Tỉnh Lâm Đồng",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "75",
+    "name": "Tỉnh Đồng Nai",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "79",
+    "name": "Thành phố Hồ Chí Minh",
+    "type": "CENTRAL_MUNICIPALITY",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "80",
+    "name": "Tỉnh Tây Ninh",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "82",
+    "name": "Tỉnh Đồng Tháp",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "86",
+    "name": "Tỉnh Vĩnh Long",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "91",
+    "name": "Tỉnh An Giang",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "92",
+    "name": "Thành phố Cần Thơ",
+    "type": "CENTRAL_MUNICIPALITY",
+    "effectiveFrom": "2025-07-01"
+  },
+  {
+    "code": "96",
+    "name": "Tỉnh Cà Mau",
+    "type": "PROVINCE",
+    "effectiveFrom": "2025-07-01"
+  }
+]

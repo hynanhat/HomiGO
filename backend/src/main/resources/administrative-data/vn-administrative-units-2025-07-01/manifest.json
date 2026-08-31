@@ -1,0 +1,25 @@
+{
+  "datasetVersion": "vn-administrative-units-2025-07-01",
+  "authority": "Cục Thống kê",
+  "documentNumber": "Quyết định 19/2025/QĐ-TTg ngày 30/06/2025",
+  "effectiveDate": "2025-07-01",
+  "retrievedAt": "2026-08-30T14:10:58Z",
+  "sourceUrls": [
+    "https://www.nso.gov.vn/wp-content/uploads/2025/07/19_2025_qd-ttg_30062025-signed-6-143-da-nen.pdf",
+    "https://www.nso.gov.vn/default/2025/07/quyet-dinh-ban-hanh-bang-danh-muc-va-ma-so-cac-don-vi-hanh-chinh-viet-nam/",
+    "https://www.nso.gov.vn/wp-content/uploads/2025/06/CV-thong-bao-dieu-chinh-ma-so-don-vi-hanh-chinh-tinh-Gia-Lai-30.6.pdf"
+  ],
+  "attribution": "Bảng danh mục và mã số đơn vị hành chính Việt Nam ban hành kèm Quyết định 19/2025/QĐ-TTg.",
+  "transformVersion": "homigo-qdt19-pdf-table-v1",
+  "rawSha256": "f83055f528bf320f5546b6e62aa5cf58abe8f3594f95c9d04f82732c3c682b69",
+  "normalizedSha256": "0fc307a6e2b1ce90a912e14ddb3d1e564f479b950d6ce15bf9e6b43ae713b7cf",
+  "provinceSha256": "65ab7493846c9b4631af43ed70b3e03cd1d94289aa3637750a9f4b08e4ed34d3",
+  "communeSha256": "b1d2cbc82d4c34818129f1a6b2cc998a29ee0697b7c1a898f48cd12ec470db1a",
+  "expectedProvinceCount": 34,
+  "expectedCommuneCount": 3321,
+  "expectedTypeCounts": {
+    "COMMUNE": 2621,
+    "WARD": 687,
+    "SPECIAL_ZONE": 13
+  }
+}

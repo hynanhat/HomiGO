@@ -7,18 +7,18 @@ const listing = {
   userId: 7,
   categoryId: 11,
   categoryName: 'Căn hộ',
-  districtId: 32,
-  districtName: 'Quận 1',
-  provinceName: 'TP. Hồ Chí Minh',
-  wardId: null,
-  wardName: null,
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   projectId: null,
   projectName: null,
   title: 'Căn hộ sáng thoáng',
   description: 'Mô tả thủ công hiện tại',
   price: 3_200_000_000,
   area: 78,
-  address: 'Nguyễn Huệ, Quận 1',
+  address: 'Nguyễn Huệ',
   bedrooms: 3,
   bathrooms: 2,
   contactName: 'Seller AI',
@@ -52,10 +52,28 @@ async function mockApi(page: Page) {
     else if (path.endsWith('/categories'))
       data = pageOf([{ id: 11, name: 'Căn hộ', slug: 'can-ho', transactionType: 'BUY' }])
     else if (path.endsWith('/locations/provinces'))
-      data = pageOf([{ id: 21, name: 'TP. Hồ Chí Minh' }])
-    else if (path.includes('/provinces/21/districts'))
-      data = pageOf([{ id: 32, provinceId: 21, name: 'Quận 1' }])
-    else if (path.includes('/districts/32/wards')) data = pageOf([])
+      data = pageOf([
+        {
+          code: '79',
+          name: 'Thành phố Hồ Chí Minh',
+          type: 'CENTRAL_MUNICIPALITY',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
+    else if (path.includes('/provinces/79/commune-units'))
+      data = pageOf([
+        {
+          code: '26734',
+          provinceCode: '79',
+          name: 'Phường An Khánh',
+          type: 'WARD',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
     else if (path.endsWith('/projects')) data = pageOf([])
     else if (path.endsWith('/seller/ai-description/quota'))
       data = {
@@ -72,7 +90,8 @@ async function mockApi(page: Page) {
       expect(body).toMatchObject({
         keywords: 'ban công thoáng',
         categoryId: 11,
-        districtId: 32,
+        provinceCode: '79',
+        communeCode: '26734',
         price: 3_200_000_000,
         area: 78,
       })
@@ -109,8 +128,8 @@ for (const scenario of [
     await page.goto(scenario.path)
     if (scenario.needsInput) {
       await page.getByLabel(/Danh mục/).selectOption('11')
-      await page.getByLabel('Tỉnh / thành phố').selectOption('21')
-      await page.getByLabel(/Quận \/ huyện/).selectOption('32')
+      await page.getByLabel('Tỉnh / thành phố').selectOption('79')
+      await page.getByLabel(/Phường \/ xã \/ đặc khu/).selectOption('26734')
       await page.getByLabel(/Giá/).fill(String(listing.price))
       await page.getByLabel(/Diện tích/).fill(String(listing.area))
       await page.getByLabel(/Mô tả chi tiết/).fill(listing.description)

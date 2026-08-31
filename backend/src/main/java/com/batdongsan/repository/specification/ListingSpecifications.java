@@ -26,9 +26,10 @@ public final class ListingSpecifications {
                     cb.like(cb.lower(root.get("address")),pattern,'\\')));}
         if(hasText(f.getTransactionType()))predicates.add(cb.equal(root.join("category").get("transactionType"),
                 TransactionType.valueOf(f.getTransactionType().trim().toUpperCase(Locale.ROOT))));
-        if(f.getProvinceId()!=null)predicates.add(cb.equal(root.join("district").join("province").get("id"),f.getProvinceId()));
-        if(f.getDistrictId()!=null)predicates.add(cb.equal(root.join("district").get("id"),f.getDistrictId()));
-        if(f.getWardId()!=null)predicates.add(cb.equal(root.join("ward",JoinType.LEFT).get("id"),f.getWardId()));
+        if(hasText(f.getProvinceCode()))predicates.add(cb.equal(
+                root.join("administrativeProvince").get("officialCode"),f.getProvinceCode()));
+        if(hasText(f.getCommuneCode()))predicates.add(cb.equal(
+                root.join("communeUnit").get("officialCode"),f.getCommuneCode()));
         if(f.getCategoryId()!=null)predicates.add(cb.equal(root.join("category").get("id"),f.getCategoryId()));
         if(f.getProjectId()!=null)predicates.add(cb.equal(root.join("project",JoinType.LEFT).get("id"),f.getProjectId()));
         if(f.getMinPrice()!=null)predicates.add(cb.greaterThanOrEqualTo(root.get("price"),f.getMinPrice()));

@@ -26,13 +26,13 @@ public class Listing {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "district_id", nullable = false)
-    private District district;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "administrative_province_id", nullable = false)
+    private AdministrativeProvince administrativeProvince;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ward_id")
-    private Ward ward;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "commune_unit_id", nullable = false)
+    private CommuneUnit communeUnit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
@@ -97,10 +97,10 @@ public class Listing {
     public void setUser(User user) { this.user = user; }
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
-    public District getDistrict() { return district; }
-    public void setDistrict(District district) { this.district = district; }
-    public Ward getWard() { return ward; }
-    public void setWard(Ward ward) { this.ward = ward; }
+    public AdministrativeProvince getAdministrativeProvince() { return administrativeProvince; }
+    public void setAdministrativeProvince(AdministrativeProvince administrativeProvince) { this.administrativeProvince = administrativeProvince; }
+    public CommuneUnit getCommuneUnit() { return communeUnit; }
+    public void setCommuneUnit(CommuneUnit communeUnit) { this.communeUnit = communeUnit; }
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
     public String getTitle() { return title; }

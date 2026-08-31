@@ -3,7 +3,8 @@ import { listingFormSchema } from './listingFormSchema'
 
 const valid = {
   categoryId: 1,
-  districtId: 2,
+  provinceCode: '79',
+  communeCode: '26734',
   title: 'Nhà đẹp',
   description: 'Mô tả',
   price: 1,

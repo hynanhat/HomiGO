@@ -3,14 +3,11 @@ import type { PageResponse } from '@/types/api'
 import type {
   AdminUser,
   Category,
-  DistrictOption,
   ListingStatus,
   ModerationItem,
   ProjectStatus,
   ProjectSummary,
-  ProvinceOption,
   TransactionType,
-  WardOption,
 } from '@/types/domain'
 
 export interface CategoryRequest {
@@ -22,8 +19,8 @@ export interface ProjectRequest {
   name: string
   slug: string
   investor: string
-  districtId: number
-  wardId?: number
+  provinceCode: string
+  communeCode: string
   address: string
   latitude?: number
   longitude?: number
@@ -32,21 +29,36 @@ export interface ProjectRequest {
   priceFrom?: number
   priceTo?: number
 }
-export interface ProvinceRequest {
-  name: string
-}
-export interface DistrictRequest {
-  provinceId: number
-  name: string
-}
-export interface WardRequest {
-  districtId: number
-  name: string
-  code: string
-}
-export type AdminLocationKind = 'provinces' | 'districts' | 'wards'
-export type AdminLocationRow = ProvinceOption | DistrictOption | WardOption
 
+export const PINNED_ADMINISTRATIVE_DATASET_VERSION = 'vn-administrative-units-2025-07-01'
+export const PINNED_PRODUCTION_CATEGORY_VERSION = 'categories-v1'
+
+export type AdministrativeDatasetStatus =
+  'STAGED' | 'VALIDATED' | 'ACTIVE' | 'FAILED' | 'SUPERSEDED'
+
+export interface AdministrativeDatasetRelease {
+  datasetVersion: string
+  authority: string
+  documentNumber: string
+  effectiveDate: string
+  rawSha256: string
+  normalizedSha256: string
+  expectedProvinceCount: number
+  expectedCommuneCount: number
+  actualProvinceCount: number | null
+  actualCommuneCount: number | null
+  status: AdministrativeDatasetStatus
+  validationSummary: string | null
+  validatedAt: string | null
+  activatedAt: string | null
+}
+
+export interface ProductionCategoryInitialization {
+  version: string
+  total: number
+  created: number
+  unchanged: number
+}
 export const getModerationQueue = (status: ListingStatus = 'PENDING', page = 0, size = 20) =>
   apiClient.get<PageResponse<ModerationItem>>('/admin/listings', { params: { status, page, size } })
 export const approveListing = (id: number) =>
@@ -72,19 +84,25 @@ export const createProject = (request: ProjectRequest) =>
 export const updateProject = (id: number, request: ProjectRequest) =>
   apiClient.put<ProjectSummary>(`/admin/projects/${id}`, request)
 export const deleteProject = (id: number) => apiClient.delete<void>(`/admin/projects/${id}`)
-export const getAdminLocations = <T extends AdminLocationRow>(
-  kind: AdminLocationKind,
-  page = 0,
-  size = 100,
-) => apiClient.get<PageResponse<T>>(`/admin/locations/${kind}`, { params: { page, size } })
-export const createAdminLocation = <T extends AdminLocationRow>(
-  kind: AdminLocationKind,
-  request: ProvinceRequest | DistrictRequest | WardRequest,
-) => apiClient.post<T>(`/admin/locations/${kind}`, request)
-export const updateAdminLocation = <T extends AdminLocationRow>(
-  kind: AdminLocationKind,
-  id: number,
-  request: ProvinceRequest | DistrictRequest | WardRequest,
-) => apiClient.put<T>(`/admin/locations/${kind}/${id}`, request)
-export const deleteAdminLocation = (kind: AdminLocationKind, id: number) =>
-  apiClient.delete<void>(`/admin/locations/${kind}/${id}`)
+
+export const getAdministrativeDatasets = (page = 0, size = 10) =>
+  apiClient.get<PageResponse<AdministrativeDatasetRelease>>('/admin/location-datasets', {
+    params: { page, size },
+  })
+
+export const validateAdministrativeDataset = (datasetVersion: string) =>
+  apiClient.post<AdministrativeDatasetRelease>(
+    `/admin/location-datasets/${encodeURIComponent(datasetVersion)}/validate`,
+  )
+
+export const activateAdministrativeDataset = (datasetVersion: string) =>
+  apiClient.post<AdministrativeDatasetRelease>(
+    `/admin/location-datasets/${encodeURIComponent(datasetVersion)}/activate`,
+    undefined,
+    { timeout: 120_000 },
+  )
+
+export const initializeProductionCategories = (version: string) =>
+  apiClient.post<ProductionCategoryInitialization>(
+    `/admin/production-categories/${encodeURIComponent(version)}/initialize`,
+  )

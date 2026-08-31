@@ -7,9 +7,8 @@ import java.math.BigDecimal;
 public class ListingFilter {
     @Size(max=100,message="Từ khóa không được vượt quá 100 ký tự.") private String keyword;
     @Pattern(regexp="(?i)BUY|RENT",message="Loại giao dịch phải là BUY hoặc RENT.") private String transactionType;
-    @Min(value=1,message="Mã tỉnh/thành phố phải lớn hơn 0.") private Long provinceId;
-    @Min(value=1,message="Mã quận/huyện phải lớn hơn 0.") private Long districtId;
-    @Min(value=1,message="Mã phường/xã phải lớn hơn 0.") private Long wardId;
+    @Pattern(regexp="\\d{2}",message="Mã tỉnh/thành phố phải có 2 chữ số.") private String provinceCode;
+    @Pattern(regexp="\\d{5}",message="Mã phường/xã/đặc khu phải có 5 chữ số.") private String communeCode;
     @Min(value=1,message="Mã danh mục phải lớn hơn 0.") private Long categoryId;
     @Min(value=1,message="Mã dự án phải lớn hơn 0.") private Long projectId;
     @DecimalMin(value="0",inclusive=false,message="Giá tối thiểu phải lớn hơn 0.") private BigDecimal minPrice;
@@ -31,6 +30,8 @@ public class ListingFilter {
     @AssertTrue(message="Khung bản đồ phải có đủ bốn tọa độ và giá trị tối thiểu nhỏ hơn tối đa.")
     public boolean isBoundingBoxValid(){boolean none=minLat==null&&maxLat==null&&minLng==null&&maxLng==null;
         boolean all=minLat!=null&&maxLat!=null&&minLng!=null&&maxLng!=null;return none||(all&&minLat<maxLat&&minLng<maxLng);}
+    @AssertTrue(message="Vui lòng chọn tỉnh/thành phố trước khi lọc phường/xã/đặc khu.")
+    public boolean isLocationHierarchyValid(){return communeCode==null||provinceCode!=null;}
 
     public Sort toSort(){return switch(sort==null?"newest":sort){
         case "priceAsc"->Sort.by(Sort.Order.asc("price"),Sort.Order.asc("id"));
@@ -41,9 +42,8 @@ public class ListingFilter {
 
     public String getKeyword(){return keyword;} public void setKeyword(String v){keyword=v;}
     public String getTransactionType(){return transactionType;} public void setTransactionType(String v){transactionType=v;}
-    public Long getProvinceId(){return provinceId;} public void setProvinceId(Long v){provinceId=v;}
-    public Long getDistrictId(){return districtId;} public void setDistrictId(Long v){districtId=v;}
-    public Long getWardId(){return wardId;} public void setWardId(Long v){wardId=v;}
+    public String getProvinceCode(){return provinceCode;} public void setProvinceCode(String v){provinceCode=v;}
+    public String getCommuneCode(){return communeCode;} public void setCommuneCode(String v){communeCode=v;}
     public Long getCategoryId(){return categoryId;} public void setCategoryId(Long v){categoryId=v;}
     public Long getProjectId(){return projectId;} public void setProjectId(Long v){projectId=v;}
     public BigDecimal getMinPrice(){return minPrice;} public void setMinPrice(BigDecimal v){minPrice=v;}

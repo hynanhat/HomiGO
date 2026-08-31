@@ -5,13 +5,15 @@ const listing = {
   publicCode: 'HMG-2026-000101',
   userId: 2,
   version: 1,
-  title: 'Căn hộ hai phòng ngủ tại Thảo Điền',
+  title: 'Căn hộ hai phòng ngủ tại An Khánh',
   description: 'Không gian sáng, phù hợp gia đình trẻ.',
   categoryName: 'Căn hộ',
   projectName: 'Homi Riverside',
-  provinceName: 'TP. Hồ Chí Minh',
-  districtName: 'Thành phố Thủ Đức',
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   price: 5800000000,
   area: 82,
@@ -30,10 +32,11 @@ const project = {
   name: 'Homi Riverside',
   slug: 'homi-riverside',
   investor: 'Homi Group',
-  districtId: 32,
-  districtName: 'Thành phố Thủ Đức',
-  wardId: 41,
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   status: 'IN_PROGRESS',
   priceFrom: 4500000000,
@@ -79,11 +82,29 @@ async function mockPublicApi(page: Page) {
     else if (path.endsWith('/projects')) data = pageOf([project])
     else if (path.endsWith('/categories'))
       data = pageOf([{ id: 11, name: 'Căn hộ', slug: 'can-ho', transactionType: 'BUY' }])
-    else if (path.endsWith('/provinces')) data = pageOf([{ id: 21, name: 'TP. Hồ Chí Minh' }])
-    else if (path.includes('/districts'))
-      data = pageOf([{ id: 32, provinceId: 21, name: 'Thành phố Thủ Đức' }])
-    else if (path.includes('/wards'))
-      data = pageOf([{ id: 41, districtId: 32, name: 'Phường Thảo Điền', code: 'THAO-DIEN' }])
+    else if (path.endsWith('/provinces'))
+      data = pageOf([
+        {
+          code: '79',
+          name: 'Thành phố Hồ Chí Minh',
+          type: 'CENTRAL_MUNICIPALITY',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
+    else if (path.includes('/provinces/79/commune-units'))
+      data = pageOf([
+        {
+          code: '26734',
+          provinceCode: '79',
+          name: 'Phường An Khánh',
+          type: 'WARD',
+          active: true,
+          effectiveFrom: '2025-07-01',
+          sourceVersion: '2025-07-01',
+        },
+      ])
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -96,7 +117,7 @@ test('guest searches, filters and opens a listing by publicCode', async ({ page 
   await mockPublicApi(page)
   await page.goto('/')
   await page.getByRole('button', { name: /Thuê/ }).click()
-  await page.getByLabel('Tìm bất động sản').fill('Thảo Điền')
+  await page.getByLabel('Tìm bất động sản').fill('An Khánh')
   await page.getByRole('button', { name: /Tìm kiếm/ }).click()
   await expect(page).toHaveURL(/transactionType=RENT/)
   await expect(page.getByText('1 kết quả')).toBeVisible()
@@ -105,10 +126,10 @@ test('guest searches, filters and opens a listing by publicCode', async ({ page 
     await page
       .getByRole('dialog', { name: 'Bộ lọc tìm kiếm' })
       .getByLabel('Tỉnh / thành phố')
-      .selectOption('21')
+      .selectOption('79')
     await page.getByRole('button', { name: 'Xem kết quả' }).click()
   } else {
-    await page.getByLabel('Tỉnh / thành phố').selectOption('21')
+    await page.getByLabel('Tỉnh / thành phố').selectOption('79')
   }
   await page
     .getByRole('link', { name: /Xem Căn hộ hai phòng ngủ/ })

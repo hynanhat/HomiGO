@@ -13,8 +13,8 @@ export interface AiDescriptionQuota {
 export interface AiDescriptionRequest {
   keywords: string
   categoryId: number
-  districtId: number
-  wardId?: number
+  provinceCode: string
+  communeCode: string
   projectId?: number
   title?: string
   price: number
@@ -40,8 +40,8 @@ export function toAiDescriptionRequest(
   return {
     keywords: keywords.trim(),
     categoryId: listing.categoryId,
-    districtId: listing.districtId,
-    wardId: listing.wardId,
+    provinceCode: listing.provinceCode,
+    communeCode: listing.communeCode,
     projectId: listing.projectId,
     title: listing.title.trim() || undefined,
     price: listing.price,

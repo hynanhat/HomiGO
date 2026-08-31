@@ -5,8 +5,12 @@ import java.math.BigDecimal;
 
 public class ListingReq {
     @NotNull(message = "Mã danh mục không được để trống.") private Long categoryId;
-    @NotNull(message = "Mã quận/huyện không được để trống.") private Long districtId;
-    private Long wardId;
+    @NotBlank(message = "Mã tỉnh/thành phố không được để trống.")
+    @Pattern(regexp = "^[0-9]{2}$", message = "Mã tỉnh/thành phố không hợp lệ.")
+    private String provinceCode;
+    @NotBlank(message = "Mã phường/xã/đặc khu không được để trống.")
+    @Pattern(regexp = "^[0-9]{5}$", message = "Mã phường/xã/đặc khu không hợp lệ.")
+    private String communeCode;
     private Long projectId;
     @NotBlank(message = "Tiêu đề không được để trống.") @Size(max = 200) private String title;
     @NotBlank(message = "Mô tả không được để trống.") @Size(max = 10000) private String description;
@@ -26,8 +30,8 @@ public class ListingReq {
     private Long version;
 
     public Long getCategoryId() { return categoryId; } public void setCategoryId(Long v) { categoryId=v; }
-    public Long getDistrictId() { return districtId; } public void setDistrictId(Long v) { districtId=v; }
-    public Long getWardId() { return wardId; } public void setWardId(Long v) { wardId=v; }
+    public String getProvinceCode() { return provinceCode; } public void setProvinceCode(String v) { provinceCode=v; }
+    public String getCommuneCode() { return communeCode; } public void setCommuneCode(String v) { communeCode=v; }
     public Long getProjectId() { return projectId; } public void setProjectId(Long v) { projectId=v; }
     public String getTitle() { return title; } public void setTitle(String v) { title=v; }
     public String getDescription() { return description; } public void setDescription(String v) { description=v; }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button, Input, Select, Textarea } from '@/components/ui'
+import { TwoLevelLocationFields } from '@/components/location/TwoLevelLocationFields'
 import { ErrorState, Skeleton, useToast } from '@/components/feedback'
 import { AdminDataTable } from '@/features/admin/components/AdminDataTable'
 import { DeleteConfirmation } from '@/features/admin/components/DeleteConfirmation'
@@ -18,7 +19,8 @@ const empty: ProjectRequest = {
   name: '',
   slug: '',
   investor: '',
-  districtId: 0,
+  provinceCode: '',
+  communeCode: '',
   address: '',
   status: 'PLANNING',
   description: '',
@@ -43,8 +45,8 @@ export default function ProjectManagementPage() {
       name: item.name,
       slug: item.slug,
       investor: item.investor,
-      districtId: item.districtId,
-      wardId: item.wardId ?? undefined,
+      provinceCode: item.provinceCode,
+      communeCode: item.communeCode,
       address: item.address,
       latitude: item.latitude ?? undefined,
       longitude: item.longitude ?? undefined,
@@ -59,7 +61,8 @@ export default function ProjectManagementPage() {
       !form.name ||
       !form.slug ||
       !form.investor ||
-      !form.districtId ||
+      !form.provinceCode ||
+      !form.communeCode ||
       !form.address ||
       !form.description
     )
@@ -87,7 +90,11 @@ export default function ProjectManagementPage() {
         </div>
       ),
     },
-    { key: 'district', header: 'Quận/huyện', render: (item: ProjectSummary) => item.districtName },
+    {
+      key: 'location',
+      header: 'Địa chỉ hành chính',
+      render: (item: ProjectSummary) => `${item.communeName}, ${item.provinceName}`,
+    },
     { key: 'status', header: 'Trạng thái', render: (item: ProjectSummary) => item.status },
     {
       key: 'actions',
@@ -147,20 +154,16 @@ export default function ProjectManagementPage() {
           value={form.investor}
           onChange={(e) => setForm({ ...form, investor: e.target.value })}
         />
-        <Input
-          label="Mã quận/huyện"
-          type="number"
-          min="1"
-          required
-          value={form.districtId || ''}
-          onChange={(e) => setForm({ ...form, districtId: Number(e.target.value) })}
-        />
-        <Input
-          label="Mã phường/xã"
-          type="number"
-          min="1"
-          value={form.wardId ?? ''}
-          onChange={(e) => setForm({ ...form, wardId: Number(e.target.value) || undefined })}
+        <TwoLevelLocationFields
+          value={form}
+          onChange={(changes) =>
+            setForm({
+              ...form,
+              provinceCode: changes.provinceCode ?? '',
+              communeCode: changes.communeCode ?? '',
+            })
+          }
+          className="grid gap-4"
         />
         <Input
           label="Địa chỉ"

@@ -6,16 +6,11 @@ import com.batdongsan.dto.project.ProjectDetailRes;
 import com.batdongsan.dto.project.ProjectFilter;
 import com.batdongsan.dto.project.ProjectSummaryRes;
 import com.batdongsan.dto.project.ProjectReq;
-import com.batdongsan.entity.District;
 import com.batdongsan.entity.Project;
-import com.batdongsan.entity.Ward;
-import com.batdongsan.exception.BadRequestException;
 import com.batdongsan.exception.ConflictException;
 import com.batdongsan.exception.ResourceNotFoundException;
 import com.batdongsan.repository.ListingRepository;
 import com.batdongsan.repository.ProjectRepository;
-import com.batdongsan.repository.DistrictRepository;
-import com.batdongsan.repository.WardRepository;
 import com.batdongsan.repository.specification.ListingSpecifications;
 import com.batdongsan.repository.specification.ProjectSpecifications;
 import org.springframework.data.domain.Page;
@@ -31,15 +26,13 @@ import java.time.LocalDateTime;
 public class ProjectService {
     private final ProjectRepository projects;
     private final ListingRepository listings;
-    private final DistrictRepository districts;
-    private final WardRepository wards;
+    private final LocationService locationService;
 
     public ProjectService(ProjectRepository projects, ListingRepository listings,
-                          DistrictRepository districts, WardRepository wards) {
+                          LocationService locationService) {
         this.projects = projects;
         this.listings = listings;
-        this.districts = districts;
-        this.wards = wards;
+        this.locationService = locationService;
     }
 
     @Transactional(readOnly = true)
@@ -91,17 +84,13 @@ public class ProjectService {
     }
 
     private void apply(Project project, ProjectReq request) {
-        District district = districts.findById(request.getDistrictId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quận/huyện."));
-        Ward ward = request.getWardId() == null ? null : wards.findById(request.getWardId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã."));
-        if (ward != null && !ward.getDistrict().getId().equals(district.getId()))
-            throw new BadRequestException("Phường/xã không thuộc quận/huyện đã chọn.");
+        LocationService.CurrentAddress currentAddress = locationService.resolveActiveAddress(
+                request.getProvinceCode(), request.getCommuneCode());
         project.setName(request.getName().trim());
         project.setSlug(request.getSlug().trim());
         project.setInvestor(request.getInvestor().trim());
-        project.setDistrict(district);
-        project.setWard(ward);
+        project.setAdministrativeProvince(currentAddress.province());
+        project.setCommuneUnit(currentAddress.communeUnit());
         project.setAddress(request.getAddress().trim());
         project.setLatitude(request.getLatitude());
         project.setLongitude(request.getLongitude());

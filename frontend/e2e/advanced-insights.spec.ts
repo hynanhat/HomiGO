@@ -6,13 +6,15 @@ const listing = {
   publicCode: 'HMG-2026-000101',
   userId: 2,
   version: 1,
-  title: 'Căn hộ hai phòng ngủ tại Thảo Điền',
+  title: 'Căn hộ hai phòng ngủ tại An Khánh',
   description: 'Không gian sáng, phù hợp gia đình trẻ.',
   categoryName: 'Căn hộ',
   projectName: 'Homi Riverside',
-  provinceName: 'TP. Hồ Chí Minh',
-  districtName: 'Thành phố Thủ Đức',
-  wardName: 'Phường Thảo Điền',
+  provinceCode: '79',
+  provinceName: 'Thành phố Hồ Chí Minh',
+  communeCode: '26734',
+  communeName: 'Phường An Khánh',
+  communeType: 'WARD',
   address: '12 Nguyễn Văn Hưởng',
   price: 5_800_000_000,
   area: 82,
@@ -38,7 +40,7 @@ const notification = {
   id: 701,
   type: 'LISTING_APPROVED',
   title: 'Tin đăng đã được duyệt',
-  message: 'Tin “Căn hộ hai phòng ngủ tại Thảo Điền” đã được duyệt và đang hiển thị.',
+  message: 'Tin “Căn hộ hai phòng ngủ tại An Khánh” đã được duyệt và đang hiển thị.',
   listingId: listing.id,
   listingPublicCode: listing.publicCode,
   read: false,
@@ -105,7 +107,11 @@ async function mockAdvancedApi(page: Page, authenticated = false) {
       data = { recorded: viewRequests === 1 }
     } else if (path.endsWith('/listings/HMG-2026-000101/recommendations'))
       data = [
-        { listing: recommended, score: 88, reasons: ['Cùng loại bất động sản', 'Cùng quận/huyện'] },
+        {
+          listing: recommended,
+          score: 88,
+          reasons: ['Cùng loại bất động sản', 'Cùng phường/xã/đặc khu'],
+        },
       ]
     else if (path.endsWith('/listings/HMG-2026-000101')) data = listing
     else if (path.endsWith('/seller/listings/101/statistics'))
@@ -151,7 +157,7 @@ test('public detail records a view and renders explainable recommendations', asy
   await expect(page.getByRole('heading', { name: listing.title })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Bất động sản dành cho bạn' })).toBeVisible()
   await expect(page.getByText(recommended.title)).toBeVisible()
-  await expect(page.getByText('Cùng quận/huyện')).toBeVisible()
+  await expect(page.getByText('Cùng phường/xã/đặc khu')).toBeVisible()
   await expect.poll(getViewRequests).toBe(1)
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

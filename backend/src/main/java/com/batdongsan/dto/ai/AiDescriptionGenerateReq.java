@@ -15,12 +15,13 @@ public class AiDescriptionGenerateReq {
     @Positive(message = "Mã danh mục không hợp lệ.")
     private Long categoryId;
 
-    @NotNull(message = "Mã quận/huyện không được để trống.")
-    @Positive(message = "Mã quận/huyện không hợp lệ.")
-    private Long districtId;
+    @NotBlank(message = "Mã tỉnh/thành phố không được để trống.")
+    @Pattern(regexp = "^[0-9]{2}$", message = "Mã tỉnh/thành phố không hợp lệ.")
+    private String provinceCode;
 
-    @Positive(message = "Mã phường/xã không hợp lệ.")
-    private Long wardId;
+    @NotBlank(message = "Mã phường/xã/đặc khu không được để trống.")
+    @Pattern(regexp = "^[0-9]{5}$", message = "Mã phường/xã/đặc khu không hợp lệ.")
+    private String communeCode;
 
     @Positive(message = "Mã dự án không hợp lệ.")
     private Long projectId;
@@ -50,10 +51,10 @@ public class AiDescriptionGenerateReq {
     public void setKeywords(String keywords) { this.keywords = trim(keywords); }
     public Long getCategoryId() { return categoryId; }
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
-    public Long getDistrictId() { return districtId; }
-    public void setDistrictId(Long districtId) { this.districtId = districtId; }
-    public Long getWardId() { return wardId; }
-    public void setWardId(Long wardId) { this.wardId = wardId; }
+    public String getProvinceCode() { return provinceCode; }
+    public void setProvinceCode(String provinceCode) { this.provinceCode = trim(provinceCode); }
+    public String getCommuneCode() { return communeCode; }
+    public void setCommuneCode(String communeCode) { this.communeCode = trim(communeCode); }
     public Long getProjectId() { return projectId; }
     public void setProjectId(Long projectId) { this.projectId = projectId; }
     public String getTitle() { return title; }

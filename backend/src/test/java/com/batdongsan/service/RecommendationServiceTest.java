@@ -2,6 +2,7 @@ package com.batdongsan.service;
 
 import com.batdongsan.entity.*;
 import com.batdongsan.repository.ListingRepository;
+import com.batdongsan.support.CurrentLocationTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,16 +24,16 @@ class RecommendationServiceTest {
     @Mock ListingRepository listings;
     private RecommendationService service;
     private Category apartment;
-    private Province province;
-    private District center;
+    private AdministrativeProvince province;
+    private CommuneUnit center;
     private Listing target;
 
     @BeforeEach
     void setUp() {
         service = new RecommendationService(listings);
         apartment = category(1L, "Căn hộ", TransactionType.BUY);
-        province = new Province(); province.setId(1L); province.setName("TP. Hồ Chí Minh");
-        center = district(1L, "Quận 1", province);
+        province = CurrentLocationTestData.province(1L, "79", "Thành phố Hồ Chí Minh");
+        center = commune(1L, "26734", "Phường Sài Gòn", province);
         target = listing(10L, "TARGET", apartment, center, 3_000_000_000L, 80, LocalDateTime.now().minusDays(1));
         when(listings.findByPublicCodeAndStatus("TARGET", ListingStatus.ACTIVE)).thenReturn(Optional.of(target));
     }
@@ -40,7 +41,7 @@ class RecommendationServiceTest {
     @Test
     void closerCategoryLocationPriceAndAreaRanksFirstWithReasons() {
         Listing close = listing(11L, "CLOSE", apartment, center, 3_100_000_000L, 82, LocalDateTime.now());
-        District outer = district(2L, "Huyện Củ Chi", province);
+        CommuneUnit outer = commune(2L, "27568", "Xã Củ Chi", province);
         Listing far = listing(12L, "FAR", apartment, outer, 5_800_000_000L, 150, LocalDateTime.now());
         stubCandidates(List.of(far, close));
 
@@ -48,7 +49,7 @@ class RecommendationServiceTest {
 
         assertEquals(List.of(11L, 12L), result.stream().map(item -> item.getListing().getId()).toList());
         assertTrue(result.get(0).getScore() > result.get(1).getScore());
-        assertTrue(result.get(0).getReasons().contains("Cùng quận/huyện"));
+        assertTrue(result.get(0).getReasons().contains("Cùng phường/xã/đặc khu"));
         assertTrue(result.get(0).getReasons().contains("Mức giá tương đương"));
     }
 
@@ -82,11 +83,12 @@ class RecommendationServiceTest {
                 .thenReturn(candidates);
     }
 
-    private Listing listing(Long id, String code, Category category, District district,
+    private Listing listing(Long id, String code, Category category, CommuneUnit commune,
                             long price, double area, LocalDateTime publishedAt) {
         User user = new User(); user.setId(id + 100); user.setName("Seller"); user.setEmail(code + "@example.com");
         Listing listing = new Listing(); listing.setId(id); listing.setPublicCode(code); listing.setUser(user);
-        listing.setCategory(category); listing.setDistrict(district); listing.setTitle("Tin " + code);
+        listing.setCategory(category); listing.setAdministrativeProvince(commune.getAdministrativeProvince());
+        listing.setCommuneUnit(commune); listing.setTitle("Tin " + code);
         listing.setDescription("Mô tả"); listing.setPrice(BigDecimal.valueOf(price)); listing.setArea(area);
         listing.setAddress("Địa chỉ"); listing.setContactName("Seller"); listing.setContactPhone("0901234567");
         listing.setStatus(ListingStatus.ACTIVE); listing.setPublishedAt(publishedAt);
@@ -99,7 +101,7 @@ class RecommendationServiceTest {
         category.setSlug("category-" + id); category.setTransactionType(transactionType); return category;
     }
 
-    private District district(Long id, String name, Province province) {
-        District district = new District(); district.setId(id); district.setName(name); district.setProvince(province); return district;
+    private CommuneUnit commune(Long id, String code, String name, AdministrativeProvince province) {
+        return CurrentLocationTestData.commune(id, code, name, province);
     }
 }

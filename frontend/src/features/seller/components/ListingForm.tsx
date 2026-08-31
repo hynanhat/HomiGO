@@ -8,7 +8,8 @@ import { ListingClassificationFields } from './ListingClassificationFields'
 
 export const emptyListingForm: ListingFormValues = {
   categoryId: 0,
-  districtId: 0,
+  provinceCode: '',
+  communeCode: '',
   title: '',
   description: '',
   price: 0,

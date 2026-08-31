@@ -17,7 +17,7 @@ describe('seller workspace', () => {
         </ToastProvider>
       </QueryClientProvider>,
     )
-    expect(await screen.findByText('Căn hộ hai phòng ngủ tại Thảo Điền')).toBeInTheDocument()
+    expect(await screen.findByText('Căn hộ hai phòng ngủ tại An Khánh')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Đang hiển thị' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ngừng hiển thị' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Gửi duyệt' })).not.toBeInTheDocument()
