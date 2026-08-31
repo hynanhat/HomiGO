@@ -48,10 +48,17 @@ class AdminModerationFlowIntegrationTest {
     void adminApprovesRejectsAndBansWithAllRequiredSideEffects() throws Exception {
         mvc.perform(get("/api/v1/admin/listings")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(2));
+        mvc.perform(get("/api/v1/admin/listings/{id}", pending.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.listing.description").exists())
+                .andExpect(jsonPath("$.data.seller.email").value(seller.getEmail()))
+                .andExpect(jsonPath("$.data.history").isArray());
         mvc.perform(get("/api/v1/admin/listings").param("status","UNKNOWN"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
 
-        mvc.perform(post("/api/v1/admin/listings/{id}/approve",pending.getId()))
+        mvc.perform(post("/api/v1/admin/listings/{id}/approve",pending.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedVersion\":0}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("ACTIVE"));
         Listing approved=listings.findById(pending.getId()).orElseThrow();
         org.junit.jupiter.api.Assertions.assertNotNull(approved.getPublishedAt());
@@ -64,7 +71,8 @@ class AdminModerationFlowIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
         mvc.perform(post("/api/v1/admin/listings/{id}/reject",rejectedCandidate.getId())
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Thiếu giấy tờ pháp lý\"}"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedVersion\":0,\"reason\":\"Thiếu giấy tờ pháp lý\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("REJECTED"))
                 .andExpect(jsonPath("$.data.rejectionReason").value("Thiếu giấy tờ pháp lý"));
 
@@ -82,9 +90,44 @@ class AdminModerationFlowIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username="admin@homigo.test",roles="ADMIN")
+    void adminRemovesAnActiveListingWithAuditAndPublicExclusion() throws Exception {
+        mvc.perform(post("/api/v1/admin/listings/{id}/approve", pending.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedVersion\":0}"))
+                .andExpect(status().isOk());
+        Listing active = listings.findById(pending.getId()).orElseThrow();
+
+        mvc.perform(post("/api/v1/admin/listings/{id}/remove", pending.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedVersion\":" + active.getVersion()
+                                + ",\"reason\":\"  a  \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+
+        mvc.perform(post("/api/v1/admin/listings/{id}/remove", pending.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedVersion\":" + active.getVersion()
+                                + ",\"reason\":\"Nội dung vi phạm chính sách nền tảng\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("REMOVED"));
+
+        Listing removed = listings.findById(pending.getId()).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(ListingStatus.REMOVED, removed.getStatus());
+        org.junit.jupiter.api.Assertions.assertEquals(
+                "Nội dung vi phạm chính sách nền tảng", removed.getRemovalReason());
+        org.junit.jupiter.api.Assertions.assertNotNull(removed.getRemovedAt());
+        org.junit.jupiter.api.Assertions.assertEquals(2, histories.findAll().size());
+        mvc.perform(get("/api/v1/listings/{publicCode}", pending.getPublicCode()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @WithMockUser(username="seller@homigo.test",roles="SELLER")
     void sellerCannotAccessModerationQueue() throws Exception {
         mvc.perform(get("/api/v1/admin/listings"))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+        mvc.perform(get("/api/v1/admin/listings/{id}", pending.getId()))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
     }
 

@@ -2,7 +2,8 @@ import type { PageResponse } from './api'
 
 export type UserRole = 'USER' | 'SELLER' | 'ADMIN'
 export type UserStatus = 'ACTIVE' | 'BANNED'
-export type ListingStatus = 'DRAFT' | 'PENDING' | 'ACTIVE' | 'REJECTED' | 'INACTIVE' | 'EXPIRED'
+export type ListingStatus =
+  'DRAFT' | 'PENDING' | 'ACTIVE' | 'REJECTED' | 'INACTIVE' | 'EXPIRED' | 'REMOVED'
 export type ProjectStatus = 'PLANNING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD'
 export type TransactionType = 'BUY' | 'RENT'
 export type SessionStatus = 'restoring' | 'authenticated' | 'anonymous'
@@ -51,6 +52,7 @@ export interface Listing {
   description: string
   categoryName: string
   categoryId?: number
+  transactionType: TransactionType
   projectName?: string | null
   projectId?: number | null
   provinceName: string
@@ -73,12 +75,15 @@ export interface Listing {
   contactPhone: string
   status: ListingStatus
   rejectionReason?: string | null
+  removalReason?: string | null
   images: string[]
   imageIds?: number[]
   createdAt: string
   updatedAt: string
+  approvedAt?: string | null
   publishedAt?: string | null
   expiresAt?: string | null
+  removedAt?: string | null
 }
 
 export type ListingSort = 'newest' | 'priceAsc' | 'priceDesc' | 'areaAsc' | 'areaDesc'
@@ -179,4 +184,29 @@ export interface ModerationItem {
   publishedAt?: string | null
   expiresAt?: string | null
   version: number
+}
+
+export interface AdminListingSeller {
+  id: number
+  name: string
+  email: string
+  phone?: string | null
+  status: UserStatus
+  createdAt: string
+}
+
+export interface AdminListingHistory {
+  id: number
+  fromStatus?: ListingStatus | null
+  toStatus: ListingStatus
+  reason?: string | null
+  changedById: number
+  changedByName: string
+  createdAt: string
+}
+
+export interface AdminListingDetail {
+  listing: Listing
+  seller: AdminListingSeller
+  history: AdminListingHistory[]
 }

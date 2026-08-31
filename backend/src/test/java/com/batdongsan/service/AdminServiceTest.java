@@ -1,9 +1,12 @@
 package com.batdongsan.service;
 
 import com.batdongsan.dto.admin.BanUserReq;
+import com.batdongsan.dto.admin.ApproveListingReq;
 import com.batdongsan.dto.admin.RejectListingReq;
+import com.batdongsan.dto.admin.RemoveListingReq;
 import com.batdongsan.entity.*;
 import com.batdongsan.exception.BadRequestException;
+import com.batdongsan.exception.ConflictException;
 import com.batdongsan.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,11 +45,11 @@ class AdminServiceTest {
     @Test
     void approvePendingListingPublishesForThirtyDaysAndAuditsAdmin() {
         Listing listing = listing(ListingStatus.PENDING);
-        when(listings.findById(10L)).thenReturn(Optional.of(listing));
+        when(listings.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         when(users.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
         when(listings.saveAndFlush(listing)).thenReturn(listing);
 
-        var result = service.approveListing(10L, admin.getEmail());
+        var result = service.approveListing(10L, admin.getEmail(), approveRequest(0L));
 
         assertEquals(ListingStatus.ACTIVE, listing.getStatus());
         assertEquals(admin, listing.getApprovedBy());
@@ -60,20 +63,22 @@ class AdminServiceTest {
 
     @Test
     void approveRejectsListingOutsidePendingState() {
-        when(listings.findById(10L)).thenReturn(Optional.of(listing(ListingStatus.DRAFT)));
+        when(listings.findByIdForUpdate(10L)).thenReturn(Optional.of(listing(ListingStatus.DRAFT)));
         when(users.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
 
-        assertThrows(BadRequestException.class, () -> service.approveListing(10L, admin.getEmail()));
+        assertThrows(ConflictException.class,
+                () -> service.approveListing(10L, admin.getEmail(), approveRequest(0L)));
         verify(listings, never()).saveAndFlush(any());
     }
 
     @Test
     void rejectPendingListingRequiresAndStoresReasonWithAudit() {
         Listing listing = listing(ListingStatus.PENDING);
-        when(listings.findById(10L)).thenReturn(Optional.of(listing));
+        when(listings.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         when(users.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
         when(listings.saveAndFlush(listing)).thenReturn(listing);
         RejectListingReq request = new RejectListingReq();
+        request.setExpectedVersion(0L);
         request.setReason("Thông tin pháp lý chưa rõ ràng");
 
         var result = service.rejectListing(10L, admin.getEmail(), request);
@@ -83,6 +88,42 @@ class AdminServiceTest {
         assertEquals(request.getReason(), result.getRejectionReason());
         verify(histories).save(argThat(h -> h.getToStatus() == ListingStatus.REJECTED
                 && request.getReason().equals(h.getReason())));
+    }
+
+    @Test
+    void removeActiveListingStoresReasonActorHistoryAndNotification() {
+        Listing listing = listing(ListingStatus.ACTIVE);
+        when(listings.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
+        when(users.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
+        when(listings.saveAndFlush(listing)).thenReturn(listing);
+        RemoveListingReq request = new RemoveListingReq();
+        request.setExpectedVersion(0L);
+        request.setReason("Nội dung vi phạm chính sách");
+
+        var result = service.removeListing(10L, admin.getEmail(), request);
+
+        assertEquals("REMOVED", result.getStatus());
+        assertEquals(ListingStatus.REMOVED, listing.getStatus());
+        assertEquals(request.getReason(), listing.getRemovalReason());
+        assertEquals(admin, listing.getRemovedBy());
+        assertNotNull(listing.getRemovedAt());
+        verify(histories).save(argThat(history -> history.getFromStatus() == ListingStatus.ACTIVE
+                && history.getToStatus() == ListingStatus.REMOVED
+                && request.getReason().equals(history.getReason())));
+        verify(notificationService).notifyListingRemoved(listing);
+    }
+
+    @Test
+    void moderationRejectsAStaleVersionBeforeChangingState() {
+        Listing listing = listing(ListingStatus.PENDING);
+        listing.setVersion(4L);
+        when(listings.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
+        when(users.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
+
+        assertThrows(ConflictException.class,
+                () -> service.approveListing(10L, admin.getEmail(), approveRequest(3L)));
+        assertEquals(ListingStatus.PENDING, listing.getStatus());
+        verify(listings, never()).saveAndFlush(any());
     }
 
     @Test
@@ -117,5 +158,11 @@ class AdminServiceTest {
     private Listing listing(ListingStatus status) {
         Listing listing = new Listing(); listing.setId(10L); listing.setUser(seller); listing.setStatus(status);
         listing.setVersion(0L); return listing;
+    }
+
+    private ApproveListingReq approveRequest(Long version) {
+        ApproveListingReq request = new ApproveListingReq();
+        request.setExpectedVersion(version);
+        return request;
     }
 }

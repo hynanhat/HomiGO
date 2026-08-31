@@ -24,9 +24,10 @@ export interface ListingFormValues {
 }
 export type SellerListing = Listing
 export type ListingLifecycleAction = 'edit' | 'submit' | 'deactivate' | 'delete'
-export type ImageDraftStatus = 'local' | 'uploading' | 'uploaded' | 'failed'
+export type ImageDraftStatus = 'pending' | 'uploading' | 'uploaded' | 'failed'
 export interface ListingImageDraft {
   clientId: string
+  uploadId?: string
   serverId?: number
   file?: File
   url: string
@@ -34,6 +35,7 @@ export interface ListingImageDraft {
   contentType: string
   size: number
   status: ImageDraftStatus
+  progress?: number
   error?: string
 }
 export interface UploadedListingImage {

@@ -9,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -24,6 +25,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SavedListingIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void savedListingEndpointsRequireAuthentication() throws Exception {
@@ -60,5 +64,16 @@ class SavedListingIntegrationTest {
                 .andExpect(status().isNotFound());
         mockMvc.perform(post("/api/v1/saved-listings/3027"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "search-seller@homigo.test", roles = "SELLER")
+    void removedSavedListingIsExcludedFromTheSavedList() throws Exception {
+        mockMvc.perform(post("/api/v1/saved-listings/3001")).andExpect(status().isOk());
+        jdbcTemplate.update("update listings set status = 'REMOVED' where id = 3001");
+
+        mockMvc.perform(get("/api/v1/saved-listings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 }

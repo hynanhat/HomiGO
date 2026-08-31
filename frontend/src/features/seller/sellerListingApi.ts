@@ -15,10 +15,20 @@ export const submitSellerListing = (id: number) =>
 export const deactivateSellerListing = (id: number) =>
   apiClient.post<SellerListing>(`/seller/listings/${id}/deactivate`)
 export const deleteSellerListing = (id: number) => apiClient.delete<void>(`/seller/listings/${id}`)
-export const uploadListingImage = (id: number, file: File) => {
+export const uploadListingImage = (
+  id: number,
+  file: File,
+  uploadId: string,
+  onProgress?: (percentage: number) => void,
+) => {
   const data = new FormData()
   data.append('file', file)
-  return apiClient.post<UploadedListingImage>(`/seller/listings/${id}/images`, data)
+  data.append('uploadId', uploadId)
+  return apiClient.post<UploadedListingImage>(`/seller/listings/${id}/images`, data, {
+    onUploadProgress: (event) => {
+      if (event.total && onProgress) onProgress(Math.round((event.loaded / event.total) * 100))
+    },
+  })
 }
 export const deleteListingImage = (listingId: number, imageId: number) =>
   apiClient.delete<void>(`/seller/listings/${listingId}/images/${imageId}`)

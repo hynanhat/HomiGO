@@ -2,6 +2,7 @@ import { apiClient } from '@/lib/api/client'
 import type { PageResponse } from '@/types/api'
 import type {
   AdminUser,
+  AdminListingDetail,
   Category,
   ListingStatus,
   ModerationItem,
@@ -61,10 +62,14 @@ export interface ProductionCategoryInitialization {
 }
 export const getModerationQueue = (status: ListingStatus = 'PENDING', page = 0, size = 20) =>
   apiClient.get<PageResponse<ModerationItem>>('/admin/listings', { params: { status, page, size } })
-export const approveListing = (id: number) =>
-  apiClient.post<ModerationItem>(`/admin/listings/${id}/approve`)
-export const rejectListing = (id: number, reason: string) =>
-  apiClient.post<ModerationItem>(`/admin/listings/${id}/reject`, { reason })
+export const getAdminListing = (id: number) =>
+  apiClient.get<AdminListingDetail>(`/admin/listings/${id}`)
+export const approveListing = (id: number, expectedVersion: number) =>
+  apiClient.post<ModerationItem>(`/admin/listings/${id}/approve`, { expectedVersion })
+export const rejectListing = (id: number, reason: string, expectedVersion: number) =>
+  apiClient.post<ModerationItem>(`/admin/listings/${id}/reject`, { reason, expectedVersion })
+export const removeListing = (id: number, reason: string, expectedVersion: number) =>
+  apiClient.post<ModerationItem>(`/admin/listings/${id}/remove`, { reason, expectedVersion })
 export const getAdminUsers = (page = 0, size = 20) =>
   apiClient.get<PageResponse<AdminUser>>('/admin/users', { params: { page, size } })
 export const banUser = (id: number, reason: string) =>

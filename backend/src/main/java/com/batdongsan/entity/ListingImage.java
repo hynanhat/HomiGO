@@ -24,6 +24,8 @@ public class ListingImage {
     private String contentType;
     @Column(name = "size_bytes", nullable = false)
     private Long sizeBytes;
+    @Column(name = "client_upload_id", length = 36)
+    private String clientUploadId;
 
     @Column(name = "sort_order")
     private Integer sortOrder;
@@ -44,6 +46,8 @@ public class ListingImage {
     public void setContentType(String contentType) { this.contentType = contentType; }
     public Long getSizeBytes() { return sizeBytes; }
     public void setSizeBytes(Long sizeBytes) { this.sizeBytes = sizeBytes; }
+    public String getClientUploadId() { return clientUploadId; }
+    public void setClientUploadId(String clientUploadId) { this.clientUploadId = clientUploadId; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public LocalDateTime getCreatedAt() { return createdAt; }

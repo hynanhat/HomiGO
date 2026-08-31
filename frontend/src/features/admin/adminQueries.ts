@@ -8,6 +8,7 @@ export const adminKeys = {
   all: ['admin'] as const,
   moderation: (status: ListingStatus, page: number) =>
     ['admin', 'moderation', status, page] as const,
+  listing: (id: number) => ['admin', 'listing', id] as const,
   users: (page: number) => ['admin', 'users', page] as const,
   categories: ['admin', 'categories'] as const,
   projects: ['admin', 'projects'] as const,
@@ -18,6 +19,12 @@ export const useModerationQueue = (status: ListingStatus, page: number) =>
   useQuery({
     queryKey: adminKeys.moderation(status, page),
     queryFn: () => api.getModerationQueue(status, page),
+  })
+export const useAdminListing = (id: number) =>
+  useQuery({
+    queryKey: adminKeys.listing(id),
+    queryFn: () => api.getAdminListing(id),
+    enabled: Number.isFinite(id) && id > 0,
   })
 export const useAdminUsers = (page: number) =>
   useQuery({ queryKey: adminKeys.users(page), queryFn: () => api.getAdminUsers(page) })

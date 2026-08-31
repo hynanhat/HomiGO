@@ -8,6 +8,7 @@ import {
   communeFixtures,
   listingFixtures,
   moderationFixtures,
+  moderationDetailFixture,
   projectFixtures,
   projectDetailFixture,
   provinceFixtures,
@@ -303,6 +304,9 @@ export const handlers = [
     const { page, size } = pagination(request)
     return HttpResponse.json(buildApiResponse(buildPage(moderationFixtures, page, size)))
   }),
+  http.get('*/api/v1/admin/listings/:id', () =>
+    HttpResponse.json(buildApiResponse(moderationDetailFixture)),
+  ),
   http.post('*/api/v1/admin/listings/:id/approve', () =>
     HttpResponse.json(buildApiResponse({ ...moderationFixtures[0], status: 'ACTIVE' as const })),
   ),
@@ -312,6 +316,15 @@ export const handlers = [
         ...moderationFixtures[0],
         status: 'REJECTED' as const,
         rejectionReason: ((await request.json()) as { reason: string }).reason,
+      }),
+    ),
+  ),
+  http.post('*/api/v1/admin/listings/:id/remove', async ({ request }) =>
+    HttpResponse.json(
+      buildApiResponse({
+        ...moderationFixtures[0],
+        status: 'REMOVED' as const,
+        removalReason: ((await request.json()) as { reason: string }).reason,
       }),
     ),
   ),

@@ -53,8 +53,18 @@ public class FileStorageService {
 
     @Transactional
     public ListingImage addImage(Long listingId, String email, MultipartFile file) {
+        return addImage(listingId, email, file, null);
+    }
+
+    @Transactional
+    public ListingImage addImage(Long listingId, String email, MultipartFile file, UUID uploadId) {
         DetectedImage detected = validateAndRead(file);
         Listing listing = ownedEditable(listingId, email);
+        if (uploadId != null) {
+            ListingImage existing = images.findByListingIdAndClientUploadId(
+                    listingId, uploadId.toString()).orElse(null);
+            if (existing != null) return existing;
+        }
         long count = images.countByListingId(listingId);
         if (count >= 10) {
             throw new BadRequestException("Mỗi tin đăng chỉ được có tối đa 10 ảnh.");
@@ -76,7 +86,8 @@ public class FileStorageService {
             image.setUrl("/uploads/" + key);
             image.setContentType(detected.contentType());
             image.setSizeBytes((long) detected.bytes().length);
-            image.setSortOrder((int) count);
+            image.setClientUploadId(uploadId == null ? null : uploadId.toString());
+            image.setSortOrder(images.findMaxSortOrderByListingId(listingId) + 1);
             return images.save(image);
         } catch (RuntimeException exception) {
             deleteQuietly(target);
@@ -158,7 +169,8 @@ public class FileStorageService {
 
     private Listing ownedEditable(Long id, String email) {
         Listing listing = owned(id, email);
-        if (!EnumSet.of(ListingStatus.DRAFT, ListingStatus.REJECTED, ListingStatus.INACTIVE)
+        if (!EnumSet.of(ListingStatus.DRAFT, ListingStatus.REJECTED, ListingStatus.INACTIVE,
+                ListingStatus.REMOVED)
                 .contains(listing.getStatus())) {
             throw new BadRequestException("Chỉ có thể thay đổi ảnh của tin nháp, bị từ chối hoặc đã ẩn.");
         }

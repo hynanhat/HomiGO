@@ -13,6 +13,7 @@ const tabs: Array<{ label: string; value?: ListingStatus }> = [
   { label: 'Chờ duyệt', value: 'PENDING' },
   { label: 'Đang hiển thị', value: 'ACTIVE' },
   { label: 'Bị từ chối', value: 'REJECTED' },
+  { label: 'Đã bị gỡ', value: 'REMOVED' },
 ]
 
 export default function SellerDashboardPage() {
@@ -92,6 +93,11 @@ export default function SellerDashboardPage() {
                 {listing.rejectionReason && (
                   <p className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-800">
                     <strong>Lý do từ chối:</strong> {listing.rejectionReason}
+                  </p>
+                )}
+                {listing.removalReason && (
+                  <p className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-800">
+                    <strong>Lý do bị gỡ:</strong> {listing.removalReason}
                   </p>
                 )}
               </div>

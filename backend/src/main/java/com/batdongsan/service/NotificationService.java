@@ -89,6 +89,16 @@ public class NotificationService {
                 "Tin “" + listing.getTitle() + "” đã hết hạn. Bạn có thể chỉnh sửa và gửi duyệt lại."));
     }
 
+    @Transactional
+    public void notifyListingRemoved(Listing listing) {
+        String reason = listing.getRemovalReason() == null || listing.getRemovalReason().isBlank()
+                ? "Vui lòng kiểm tra lại nội dung tin."
+                : listing.getRemovalReason();
+        notifications.save(create(listing.getUser(), listing, NotificationType.LISTING_REMOVED,
+                "Tin đăng đã bị gỡ",
+                "Tin “" + listing.getTitle() + "” đã bị quản trị viên gỡ. Lý do: " + reason));
+    }
+
     private Notification create(User recipient, Listing listing, NotificationType type,
                                 String title, String message) {
         Notification notification = new Notification();

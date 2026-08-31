@@ -4,14 +4,17 @@ import { server } from '../../../tests/mocks/server'
 import * as api from './adminApi'
 
 describe('admin API contracts', () => {
-  it('supports moderation and user state changes', async () => {
+  it('supports detail-first moderation and user state changes', async () => {
     expect((await api.getModerationQueue()).content).toHaveLength(1)
-    expect((await api.approveListing(401)).status).toBe('ACTIVE')
-    expect((await api.rejectListing(401, 'Thiếu giấy tờ')).rejectionReason).toBe('Thiếu giấy tờ')
+    expect((await api.getAdminListing(401)).listing.id).toBe(401)
+    expect((await api.approveListing(401, 0)).status).toBe('ACTIVE')
+    expect((await api.rejectListing(401, 'Thiếu giấy tờ', 0)).rejectionReason).toBe('Thiếu giấy tờ')
+    expect((await api.removeListing(401, 'Vi phạm nội dung', 0)).status).toBe('REMOVED')
     expect((await api.getAdminUsers()).content).toHaveLength(1)
     expect((await api.banUser(301, 'Vi phạm')).status).toBe('BANNED')
     expect((await api.unbanUser(301)).status).toBe('ACTIVE')
   })
+
   it('supports category and full project data', async () => {
     const category = await api.createCategory({ name: 'Đất', slug: 'dat', transactionType: 'BUY' })
     expect(category.slug).toBe('dat')
@@ -29,6 +32,7 @@ describe('admin API contracts', () => {
       longitude: expect.any(Number),
     })
   })
+
   it('supports the pinned production bootstrap contracts', async () => {
     const datasets = await api.getAdministrativeDatasets()
     expect(datasets.content[0]).toMatchObject({
@@ -37,7 +41,6 @@ describe('admin API contracts', () => {
       expectedCommuneCount: 3321,
       status: 'VALIDATED',
     })
-
     await expect(
       api.validateAdministrativeDataset(api.PINNED_ADMINISTRATIVE_DATASET_VERSION),
     ).resolves.toMatchObject({ status: 'VALIDATED', actualProvinceCount: 34 })
@@ -48,6 +51,7 @@ describe('admin API contracts', () => {
       api.initializeProductionCategories(api.PINNED_PRODUCTION_CATEGORY_VERSION),
     ).resolves.toEqual({ version: 'categories-v1', total: 16, created: 13, unchanged: 3 })
   })
+
   it.each([400, 403, 409])('surfaces safe %s responses', async (status) => {
     server.use(
       http.post('*/api/v1/admin/categories', () =>

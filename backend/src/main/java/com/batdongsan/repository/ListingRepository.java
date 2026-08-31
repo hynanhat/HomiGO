@@ -15,12 +15,17 @@ import org.springframework.data.jpa.repository.Lock;
 import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @EntityGraph(attributePaths={"user"})
     @Query("select listing from Listing listing where listing.id = :id")
     java.util.Optional<Listing> findByIdForUpdate(@Param("id") Long id);
+
+    @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project","images"})
+    @Query("select distinct listing from Listing listing where listing.id = :id")
+    Optional<Listing> findAdminDetailById(@Param("id") Long id);
 
     @Override
     @EntityGraph(attributePaths={"user","category","administrativeProvince","communeUnit","project"})

@@ -1,6 +1,7 @@
 package com.batdongsan.service;
 
 import com.batdongsan.entity.Listing;
+import com.batdongsan.entity.ListingImage;
 import com.batdongsan.entity.ListingStatus;
 import com.batdongsan.entity.User;
 import com.batdongsan.exception.BadRequestException;
@@ -14,7 +15,10 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -65,6 +69,34 @@ class FileStorageServiceTest {
             verify(fixture.imageRepository, never()).save(Mockito.any());
             verify(fixture.imageRepository, never()).delete(Mockito.any());
         }
+    }
+
+    @Test
+    void usesStableUploadIdAndAppendsAfterTheHighestSortOrder() {
+        Fixture f = fixture();
+        Listing listing = listing();
+        listing.setStatus(ListingStatus.REMOVED);
+        UUID uploadId = UUID.randomUUID();
+        MockMultipartFile image = new MockMultipartFile("file", "a.jpg", "image/jpeg",
+                new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0});
+        when(f.listingRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(listing));
+        when(f.imageRepository.findByListingIdAndClientUploadId(1L, uploadId.toString()))
+                .thenReturn(Optional.empty());
+        when(f.imageRepository.countByListingId(1L)).thenReturn(2L);
+        when(f.imageRepository.findMaxSortOrderByListingId(1L)).thenReturn(4);
+        when(f.imageRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ListingImage saved = f.service.addImage(1L, "owner@example.com", image, uploadId);
+
+        assertEquals(uploadId.toString(), saved.getClientUploadId());
+        assertEquals(5, saved.getSortOrder());
+
+        when(f.imageRepository.findByListingIdAndClientUploadId(1L, uploadId.toString()))
+                .thenReturn(Optional.of(saved));
+        ListingImage retried = f.service.addImage(1L, "owner@example.com", image, uploadId);
+
+        assertSame(saved, retried);
+        verify(f.imageRepository, times(1)).save(Mockito.any());
     }
 
     private Fixture fixture() {

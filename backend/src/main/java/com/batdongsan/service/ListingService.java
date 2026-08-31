@@ -47,7 +47,7 @@ public class ListingService {
 
     @Transactional
     public ListingRes updateListing(Long id,String email,ListingReq request) {
-        Listing listing=owned(id,email);
+        Listing listing=ownedForUpdate(id,email);
         if(request.getVersion()==null||!Objects.equals(request.getVersion(),listing.getVersion()))
             throw new ConflictException("Tin đăng đã được thay đổi. Vui lòng tải lại trước khi cập nhật.");
         if(listing.getStatus()==ListingStatus.PENDING)
@@ -57,6 +57,8 @@ public class ListingService {
             record(listing,before,ListingStatus.PENDING,listing.getUser(),"Nội dung được chỉnh sửa và cần duyệt lại");}
         else if(before==ListingStatus.REJECTED){listing.setStatus(ListingStatus.DRAFT);
             record(listing,before,ListingStatus.DRAFT,listing.getUser(),"Chỉnh sửa tin bị từ chối");}
+        else if(before==ListingStatus.REMOVED){listing.setStatus(ListingStatus.DRAFT);clearRemovalAndPublication(listing);
+            record(listing,before,ListingStatus.DRAFT,listing.getUser(),"Chỉnh sửa tin đã bị gỡ để tạo bản nháp mới");}
         else if(before==ListingStatus.EXPIRED){listing.setStatus(ListingStatus.DRAFT);listing.setExpiresAt(null);
             listing.setPublishedAt(null);listing.setApprovedAt(null);listing.setApprovedBy(null);
             record(listing,before,ListingStatus.DRAFT,listing.getUser(),"Chỉnh sửa tin hết hạn để tạo bản nháp mới");}
@@ -65,23 +67,25 @@ public class ListingService {
         return new ListingRes(saved);
     }
 
-    @Transactional public void deleteListing(Long id,String email){Listing listing=owned(id,email);
-        if(!EnumSet.of(ListingStatus.DRAFT,ListingStatus.REJECTED,ListingStatus.INACTIVE,ListingStatus.EXPIRED).contains(listing.getStatus()))
+    @Transactional public void deleteListing(Long id,String email){Listing listing=ownedForUpdate(id,email);
+        if(!EnumSet.of(ListingStatus.DRAFT,ListingStatus.REJECTED,ListingStatus.INACTIVE,ListingStatus.EXPIRED,ListingStatus.REMOVED).contains(listing.getStatus()))
             throw new BadRequestException("Chỉ có thể xóa tin nháp, bị từ chối, đã ẩn hoặc đã hết hạn.");
         List<String> storageKeys=listing.getImages().stream().map(ListingImage::getStorageKey).filter(Objects::nonNull).toList();
         listings.delete(listing);
         if(!storageKeys.isEmpty())eventPublisher.publishEvent(new ListingFilesDeletedEvent(storageKeys));}
 
     @Transactional
-    public ListingRes submitListing(Long id,String email){Listing listing=owned(id,email);
-        if(!EnumSet.of(ListingStatus.DRAFT,ListingStatus.REJECTED,ListingStatus.INACTIVE).contains(listing.getStatus()))
+    public ListingRes submitListing(Long id,String email){Listing listing=ownedForUpdate(id,email);
+        boolean wasRemoved=listing.getStatus()==ListingStatus.REMOVED;
+        if(!EnumSet.of(ListingStatus.DRAFT,ListingStatus.REJECTED,ListingStatus.INACTIVE,ListingStatus.REMOVED).contains(listing.getStatus()))
             throw new BadRequestException("Chỉ có thể gửi duyệt tin nháp, bị từ chối hoặc đã ẩn.");
         transition(listing,ListingStatus.PENDING,listing.getUser(),"Người bán gửi duyệt");listing.setRejectionReason(null);
+        if(wasRemoved)clearRemovalAndPublication(listing);
         Listing saved=listings.saveAndFlush(listing);notificationService.notifyListingSubmitted(saved);
         return new ListingRes(saved);}
 
     @Transactional
-    public ListingRes deactivateListing(Long id,String email){Listing listing=owned(id,email);
+    public ListingRes deactivateListing(Long id,String email){Listing listing=ownedForUpdate(id,email);
         if(listing.getStatus()!=ListingStatus.ACTIVE)throw new BadRequestException("Chỉ tin đang hoạt động mới có thể ẩn.");
         transition(listing,ListingStatus.INACTIVE,listing.getUser(),"Người bán chủ động ẩn tin");
         return new ListingRes(listings.saveAndFlush(listing));}
@@ -120,7 +124,8 @@ public class ListingService {
             saved.setListing(listing);savedListings.save(saved);}}
     @Transactional public void unsaveListing(Long id,String email){User user=user(email);savedListings.deleteByUserIdAndListingId(user.getId(),id);}
     @Transactional(readOnly=true) public Page<ListingRes> getSavedListings(String email,Pageable pageable){return savedListings
-            .findByUserId(user(email).getId(),pageable).map(saved->new ListingRes(saved.getListing()));}
+            .findPublicByUserId(user(email).getId(),ListingStatus.ACTIVE,LocalDateTime.now(),pageable)
+            .map(saved->new ListingRes(saved.getListing()));}
 
     private void apply(Listing listing,ListingReq request){Category category=categories.findById(request.getCategoryId())
             .orElseThrow(()->new ResourceNotFoundException("Không tìm thấy danh mục."));
@@ -142,6 +147,13 @@ public class ListingService {
     private User user(String email){return users.findByEmail(email).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy người dùng."));}
     private Listing owned(Long id,String email){Listing listing=listings.findById(id).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy tin đăng."));
         if(!listing.getUser().getEmail().equalsIgnoreCase(email))throw new ForbiddenException("Bạn không có quyền thao tác trên tin đăng này.");return listing;}
+    private Listing ownedForUpdate(Long id,String email){Listing listing=listings.findByIdForUpdate(id)
+            .orElseThrow(()->new ResourceNotFoundException("Không tìm thấy tin đăng."));
+        if(!listing.getUser().getEmail().equalsIgnoreCase(email))
+            throw new ForbiddenException("Bạn không có quyền thao tác trên tin đăng này.");return listing;}
+    private void clearRemovalAndPublication(Listing listing){listing.setRemovalReason(null);listing.setRemovedBy(null);
+        listing.setRemovedAt(null);listing.setApprovedBy(null);listing.setApprovedAt(null);
+        listing.setPublishedAt(null);listing.setExpiresAt(null);}
     private void transition(Listing listing,ListingStatus to,User actor,String reason){ListingStatus from=listing.getStatus();listing.setStatus(to);
         listing.setUpdatedAt(LocalDateTime.now());record(listing,from,to,actor,reason);}
     private void record(Listing listing,ListingStatus from,ListingStatus to,User actor,String reason){ListingStatusHistory history=new ListingStatusHistory();

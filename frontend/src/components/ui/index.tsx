@@ -220,6 +220,7 @@ const statusPresentation: Record<ListingStatus, { label: string; variant: BadgeV
   REJECTED: { label: 'Bị từ chối', variant: 'danger' },
   INACTIVE: { label: 'Đã ngừng', variant: 'neutral' },
   EXPIRED: { label: 'Đã hết hạn', variant: 'neutral' },
+  REMOVED: { label: 'Đã bị gỡ', variant: 'danger' },
 }
 
 const badgeVariants: Record<BadgeVariant, string> = {
@@ -285,7 +286,31 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
     if (!open) return
     const previouslyFocused = document.activeElement as HTMLElement | null
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      )
+      if (focusable.length === 0) {
+        event.preventDefault()
+        dialogRef.current.focus()
+        return
+      }
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+      if (event.shiftKey && (active === first || active === dialogRef.current)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || active === dialogRef.current)) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     dialogRef.current?.focus()

@@ -21,6 +21,52 @@ const pending = (id: number) => ({
   createdAt: '2026-08-15T08:00:00',
   version: 0,
 })
+const detailFor = (item: ReturnType<typeof pending>) => ({
+  listing: {
+    id: item.id,
+    publicCode: item.publicCode,
+    userId: seller.id,
+    version: item.version,
+    title: item.title,
+    description: 'Nhà phố hai tầng, có ban công, pháp lý rõ ràng và đầy đủ thông tin liên hệ.',
+    categoryName: category.name,
+    categoryId: category.id,
+    transactionType: category.transactionType,
+    projectName: null,
+    projectId: null,
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: '79',
+    communeName: 'Phường An Khánh',
+    communeCode: '26734',
+    communeType: 'WARD',
+    address: '12 Nguyễn Văn Hưởng',
+    price: 5_800_000_000,
+    area: 82,
+    bedrooms: 2,
+    bathrooms: 2,
+    floors: 2,
+    contactName: seller.name,
+    contactPhone: seller.phone,
+    status: item.status,
+    images: ['/fixtures/moderation-front.webp', '/fixtures/moderation-room.webp'],
+    imageIds: [901, 902],
+    createdAt: item.createdAt,
+    updatedAt: item.createdAt,
+    publishedAt: item.status === 'ACTIVE' ? '2026-08-16T08:00:00' : null,
+    expiresAt: null,
+  },
+  seller,
+  history: [
+    {
+      id: 1,
+      fromStatus: 'DRAFT',
+      toStatus: 'PENDING',
+      reason: null,
+      changedById: seller.id,
+      changedAt: item.createdAt,
+    },
+  ],
+})
 const pageOf = (content: unknown[]) => ({
   content,
   number: 0,
@@ -42,15 +88,30 @@ async function mockAdmin(page: Page, user = admin) {
     const method = request.method()
     let data: unknown = null
     if (path.endsWith('/auth/refresh')) data = { accessToken: 'access', tokenType: 'Bearer', user }
-    else if (path.endsWith('/admin/listings') && method === 'GET') data = pageOf(moderation)
-    else if (path.endsWith('/approve')) {
+    else if (path.endsWith('/admin/listings') && method === 'GET') {
+      const status = new URL(request.url()).searchParams.get('status')
+      data = pageOf(moderation.filter((item) => !status || item.status === status))
+    } else if (/\/admin\/listings\/\d+$/.test(path) && method === 'GET') {
+      const id = Number(path.split('/').at(-1))
+      data = detailFor(moderation.find((item) => item.id === id) ?? pending(id))
+    } else if (path.endsWith('/approve')) {
       const id = Number(path.split('/').at(-2))
-      moderation = moderation.filter((item) => item.id !== id)
-      data = { ...pending(id), status: 'ACTIVE' }
+      moderation = moderation.map((item) =>
+        item.id === id ? { ...item, status: 'ACTIVE', version: item.version + 1 } : item,
+      )
+      data = moderation.find((item) => item.id === id)
     } else if (path.endsWith('/reject')) {
       const id = Number(path.split('/').at(-2))
-      moderation = moderation.filter((item) => item.id !== id)
-      data = { ...pending(id), status: 'REJECTED', rejectionReason: request.postDataJSON().reason }
+      moderation = moderation.map((item) =>
+        item.id === id ? { ...item, status: 'REJECTED', version: item.version + 1 } : item,
+      )
+      data = moderation.find((item) => item.id === id)
+    } else if (path.endsWith('/remove')) {
+      const id = Number(path.split('/').at(-2))
+      moderation = moderation.map((item) =>
+        item.id === id ? { ...item, status: 'REMOVED', version: item.version + 1 } : item,
+      )
+      data = moderation.find((item) => item.id === id)
     } else if (path.endsWith('/admin/users') && method === 'GET')
       data = pageOf([{ ...seller, status: userStatus }])
     else if (path.endsWith('/ban')) {
@@ -77,9 +138,17 @@ async function mockAdmin(page: Page, user = admin) {
 test('ADMIN moderates, bans/unbans and creates master data', async ({ page }) => {
   await mockAdmin(page)
   await page.goto('/admin/listings')
-  await page.getByRole('button', { name: 'Duyệt' }).first().click()
+  await page.getByRole('link', { name: 'Xem chi tiết' }).first().click()
+  await expect(page.getByText(/Nhà phố hai tầng, có ban công/)).toBeVisible()
+  await page.getByRole('button', { name: 'Duyệt tin' }).click()
   await expect(page.getByText('Đã duyệt tin đăng')).toBeVisible()
-  await page.getByRole('button', { name: 'Từ chối' }).first().click()
+  await page.getByRole('button', { name: 'Gỡ khỏi công khai' }).click()
+  await page.getByLabel(/Lý do gỡ tin/).fill('Thông tin đã được xác minh là không còn hợp lệ')
+  await page.getByRole('button', { name: 'Xác nhận gỡ tin' }).click()
+  await expect(page.getByText('Đã gỡ tin khỏi công khai')).toBeVisible()
+  await page.getByRole('link', { name: 'Trở lại hàng đợi' }).click()
+  await page.locator('a[href="/admin/listings/402"]').click()
+  await page.getByRole('button', { name: 'Từ chối' }).click()
   await page.getByLabel(/Lý do từ chối/).fill('Thiếu thông tin pháp lý')
   await page.getByRole('button', { name: 'Xác nhận từ chối' }).click()
   await expect(page.getByText('Đã từ chối tin đăng')).toBeVisible()

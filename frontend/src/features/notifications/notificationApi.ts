@@ -2,7 +2,11 @@ import { apiClient } from '@/lib/api/client'
 import type { PageResponse } from '@/types/api'
 
 export type NotificationType =
-  'LISTING_SUBMITTED' | 'LISTING_APPROVED' | 'LISTING_REJECTED' | 'LISTING_EXPIRED'
+  | 'LISTING_SUBMITTED'
+  | 'LISTING_APPROVED'
+  | 'LISTING_REJECTED'
+  | 'LISTING_EXPIRED'
+  | 'LISTING_REMOVED'
 
 export interface NotificationItem {
   id: number

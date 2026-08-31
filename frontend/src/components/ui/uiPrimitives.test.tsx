@@ -55,6 +55,28 @@ describe('UI primitives', () => {
     expect(onClose).toHaveBeenCalledOnce()
   })
 
+  it('contains keyboard focus inside an open modal', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <Button>Ngoài hộp thoại</Button>
+        <Modal open title="Nhập lý do" onClose={vi.fn()} footer={<Button>Xác nhận</Button>}>
+          <Textarea label="Lý do" />
+        </Modal>
+      </>,
+    )
+
+    const close = screen.getByRole('button', { name: 'Đóng hộp thoại' })
+    const confirm = screen.getByRole('button', { name: 'Xác nhận' })
+    expect(screen.getByRole('dialog')).toHaveFocus()
+    await user.tab()
+    expect(close).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(confirm).toHaveFocus()
+    await user.tab()
+    expect(close).toHaveFocus()
+  })
+
   it('navigates pages and announces a listing status with text', async () => {
     const user = userEvent.setup()
     const onPageChange = vi.fn()

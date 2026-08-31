@@ -26,6 +26,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const AccessDeniedPage = lazy(() => import('@/pages/AccessDeniedPage'))
 const AdminOverviewPage = lazy(() => import('@/pages/admin/AdminOverviewPage'))
 const ModerationPage = lazy(() => import('@/pages/admin/ModerationPage'))
+const AdminListingDetailPage = lazy(() => import('@/pages/admin/AdminListingDetailPage'))
 const UserManagementPage = lazy(() => import('@/pages/admin/UserManagementPage'))
 const CategoryManagementPage = lazy(() => import('@/pages/admin/CategoryManagementPage'))
 const ProjectManagementPage = lazy(() => import('@/pages/admin/ProjectManagementPage'))
@@ -88,6 +89,7 @@ export function AppRouter() {
             <Route element={<AdminLayout />}>
               <Route path="admin" element={<AdminOverviewPage />} />
               <Route path="admin/listings" element={<ModerationPage />} />
+              <Route path="admin/listings/:id" element={<AdminListingDetailPage />} />
               <Route path="admin/users" element={<UserManagementPage />} />
               <Route path="admin/categories" element={<CategoryManagementPage />} />
               <Route path="admin/projects" element={<ProjectManagementPage />} />

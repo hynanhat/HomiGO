@@ -2,6 +2,7 @@ import type { ApiResponse, PageResponse } from '@/types/api'
 import type { AdministrativeDatasetRelease } from '@/features/admin/adminApi'
 import type {
   AdminUser,
+  AdminListingDetail,
   AuthSession,
   Category,
   CommuneUnitOption,
@@ -107,6 +108,7 @@ export const listingFixtures: Listing[] = [
     description: 'Không gian sáng, phù hợp gia đình trẻ.',
     categoryName: 'Căn hộ',
     categoryId: 11,
+    transactionType: 'BUY',
     projectName: 'Homi Riverside',
     projectId: 201,
     provinceName: 'Thành phố Hồ Chí Minh',
@@ -185,3 +187,39 @@ export const moderationFixtures: ModerationItem[] = [
     version: 0,
   },
 ]
+
+export const moderationDetailFixture: AdminListingDetail = {
+  listing: {
+    ...listingFixtures[0],
+    id: 401,
+    publicCode: 'HMG-2026-000401',
+    userId: 301,
+    version: 0,
+    title: 'Nhà phố cần duyệt',
+    description: 'Nhà phố hai tầng, có ban công và đầy đủ thông tin liên hệ.',
+    status: 'PENDING',
+    images: ['/fixtures/moderation-front.webp', '/fixtures/moderation-room.webp'],
+    imageIds: [901, 902],
+    publishedAt: null,
+    expiresAt: null,
+  },
+  seller: {
+    id: adminUserFixtures[0].id,
+    name: adminUserFixtures[0].name,
+    email: adminUserFixtures[0].email,
+    phone: adminUserFixtures[0].phone,
+    status: adminUserFixtures[0].status,
+    createdAt: adminUserFixtures[0].createdAt,
+  },
+  history: [
+    {
+      id: 1,
+      fromStatus: 'DRAFT',
+      toStatus: 'PENDING',
+      reason: 'Người bán gửi duyệt',
+      changedById: adminUserFixtures[0].id,
+      changedByName: adminUserFixtures[0].name,
+      createdAt: '2026-08-15T08:00:00',
+    },
+  ],
+}

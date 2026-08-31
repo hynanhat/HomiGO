@@ -77,7 +77,9 @@ class SecurityIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void adminCanPassAdminAuthorizationRule() throws Exception {
-        mockMvc.perform(post("/api/v1/admin/listings/999/approve"))
+        mockMvc.perform(post("/api/v1/admin/listings/999/approve")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedVersion\":0}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"));
     }

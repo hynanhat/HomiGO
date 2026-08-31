@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/seller/listings")
@@ -27,7 +28,12 @@ public class SellerListingController {
     @DeleteMapping("/{id}") public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,Authentication auth){listings.deleteListing(id,auth.getName());return ResponseEntity.ok(ApiResponse.success(null));}
     @PostMapping("/{id}/submit") public ResponseEntity<ApiResponse<ListingRes>> submit(@PathVariable Long id,Authentication auth){return ResponseEntity.ok(ApiResponse.success(listings.submitListing(id,auth.getName())));}
     @PostMapping("/{id}/deactivate") public ResponseEntity<ApiResponse<ListingRes>> deactivate(@PathVariable Long id,Authentication auth){return ResponseEntity.ok(ApiResponse.success(listings.deactivateListing(id,auth.getName())));}
-    @PostMapping("/{id}/images") public ResponseEntity<ApiResponse<ListingImageRes>> image(@PathVariable Long id,@RequestParam("file") MultipartFile file,Authentication auth){return ResponseEntity.ok(ApiResponse.success(new ListingImageRes(files.addImage(id,auth.getName(),file))));}
+    @PostMapping("/{id}/images") public ResponseEntity<ApiResponse<ListingImageRes>> image(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value="uploadId",required=false) UUID uploadId,
+            Authentication auth){return ResponseEntity.ok(ApiResponse.success(
+                    new ListingImageRes(files.addImage(id,auth.getName(),file,uploadId))));}
     @DeleteMapping("/{id}/images/{imageId}") public ResponseEntity<ApiResponse<Void>> deleteImage(@PathVariable Long id,@PathVariable Long imageId,Authentication auth){files.deleteImage(id,imageId,auth.getName());return ResponseEntity.ok(ApiResponse.success(null));}
     @GetMapping("/{id}/statistics") public ResponseEntity<ApiResponse<ListingStatisticsRes>> statistics(
             @PathVariable Long id,@Valid @ModelAttribute ListingStatisticsReq request,Authentication auth){

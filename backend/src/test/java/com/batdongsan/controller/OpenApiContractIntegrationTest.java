@@ -28,7 +28,9 @@ class OpenApiContractIntegrationTest {
                 "/api/v1/locations/provinces",
                 "/api/v1/locations/provinces/{provinceCode}/commune-units",
                 "/api/v1/seller/listings", "/api/v1/seller/listings/{id}",
-                "/api/v1/admin/listings", "/api/v1/admin/categories",
+                "/api/v1/admin/listings", "/api/v1/admin/listings/{id}",
+                "/api/v1/admin/listings/{id}/approve", "/api/v1/admin/listings/{id}/reject",
+                "/api/v1/admin/listings/{id}/remove", "/api/v1/admin/categories",
                 "/api/v1/admin/projects", "/api/v1/admin/projects/{id}"
         };
         for (String path : requiredPaths) {

@@ -13,6 +13,7 @@ public class ListingRes {
     private final Long userId;
     private final Long categoryId;
     private final String categoryName;
+    private final String transactionType;
     private final String provinceCode;
     private final String provinceName;
     private final String communeCode;
@@ -37,10 +38,13 @@ public class ListingRes {
     private final String contactPhone;
     private final String status;
     private final String rejectionReason;
+    private final String removalReason;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+    private final LocalDateTime approvedAt;
     private final LocalDateTime publishedAt;
     private final LocalDateTime expiresAt;
+    private final LocalDateTime removedAt;
     private final Long version;
     private final List<String> images;
     private final List<Long> imageIds;
@@ -51,6 +55,7 @@ public class ListingRes {
         userId = listing.getUser().getId();
         categoryId = listing.getCategory().getId();
         categoryName = listing.getCategory().getName();
+        transactionType = listing.getCategory().getTransactionType().name();
         provinceCode = listing.getAdministrativeProvince().getOfficialCode();
         provinceName = listing.getAdministrativeProvince().getOfficialName();
         communeCode = listing.getCommuneUnit().getOfficialCode();
@@ -75,10 +80,13 @@ public class ListingRes {
         contactPhone = listing.getContactPhone();
         status = listing.getStatus().name();
         rejectionReason = listing.getRejectionReason();
+        removalReason = listing.getRemovalReason();
         createdAt = listing.getCreatedAt();
         updatedAt = listing.getUpdatedAt();
+        approvedAt = listing.getApprovedAt();
         publishedAt = listing.getPublishedAt();
         expiresAt = listing.getExpiresAt();
+        removedAt = listing.getRemovedAt();
         version = listing.getVersion();
         var sortedImages = listing.getImages().stream()
                 .sorted(Comparator.comparing(ListingImage::getSortOrder, Comparator.nullsLast(Integer::compareTo)))
@@ -92,6 +100,7 @@ public class ListingRes {
     public Long getUserId() { return userId; }
     public Long getCategoryId() { return categoryId; }
     public String getCategoryName() { return categoryName; }
+    public String getTransactionType() { return transactionType; }
     public String getProvinceCode() { return provinceCode; }
     public String getProvinceName() { return provinceName; }
     public String getCommuneCode() { return communeCode; }
@@ -116,10 +125,13 @@ public class ListingRes {
     public String getContactPhone() { return contactPhone; }
     public String getStatus() { return status; }
     public String getRejectionReason() { return rejectionReason; }
+    public String getRemovalReason() { return removalReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getApprovedAt() { return approvedAt; }
     public LocalDateTime getPublishedAt() { return publishedAt; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
+    public LocalDateTime getRemovedAt() { return removedAt; }
     public Long getVersion() { return version; }
     public List<String> getImages() { return images; }
     public List<Long> getImageIds() { return imageIds; }

@@ -16,6 +16,7 @@ public class ListingStatusHistory {
     private ListingStatus toStatus;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "changed_by", nullable = false)
     private User changedBy;
+    @Column(length = 1000)
     private String reason;
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

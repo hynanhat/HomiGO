@@ -36,7 +36,9 @@ describe('seller listing API', () => {
   })
   it('uploads multipart images and returns the persistent image identity', async () => {
     const file = new File(['image'], 'home.webp', { type: 'image/webp' })
-    await expect(uploadListingImage(101, file)).resolves.toMatchObject({
+    await expect(
+      uploadListingImage(101, file, '9b93cebb-ef47-46ae-a721-c662bd72def2'),
+    ).resolves.toMatchObject({
       id: 501,
       url: '/uploads/fixture.webp',
       contentType: 'image/webp',

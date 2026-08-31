@@ -64,6 +64,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
       {children}
       <div
         className="fixed right-4 top-4 z-[70] grid w-[min(24rem,calc(100vw_-_2rem))] gap-3"
+        role="region"
         aria-label="Thông báo"
       >
         {toasts.map((toast) => {

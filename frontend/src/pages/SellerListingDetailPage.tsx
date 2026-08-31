@@ -40,6 +40,11 @@ export default function SellerListingDetailPage() {
             <strong>Lý do từ chối:</strong> {item.rejectionReason}
           </p>
         )}
+        {item.removalReason && (
+          <p className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-red-900">
+            <strong>Lý do quản trị viên gỡ tin:</strong> {item.removalReason}
+          </p>
+        )}
         <dl className="mt-6 grid gap-4 sm:grid-cols-2">
           <div>
             <dt className="text-sm text-ink-600">Giá</dt>

@@ -103,6 +103,26 @@ class MySqlMigrationIntegrationTest {
         assertCutoverIsRejectedWithoutSchemaChanges();
     }
 
+    @Test
+    void v11AddsRemovalAuditAndIdempotentImageUploads() {
+        flyway("11").migrate();
+
+        Integer migrations = jdbcTemplate.queryForObject(
+                "select count(*) from flyway_schema_history where success = 1", Integer.class);
+        assertThat(migrations).isEqualTo(11);
+        assertThat(columnExists("listings", "removal_reason")).isTrue();
+        assertThat(columnExists("listings", "removed_by")).isTrue();
+        assertThat(columnExists("listings", "removed_at")).isTrue();
+        assertThat(columnExists("listing_images", "client_upload_id")).isTrue();
+        assertThat(constraintExists("fk_listings_removed_by")).isTrue();
+        assertThat(indexExists("listing_images", "uk_listing_images_client_upload")).isTrue();
+        assertThat(columnType("listings", "status")).contains("REMOVED");
+        assertThat(columnType("listing_status_history", "to_status")).contains("REMOVED");
+        assertThat(columnType("notifications", "type")).contains("LISTING_REMOVED");
+        assertThat(columnCharacterMaximumLength("listings", "rejection_reason")).isEqualTo(1000L);
+        assertThat(columnCharacterMaximumLength("listing_status_history", "reason")).isEqualTo(1000L);
+    }
+
     private long insertLegacyLocation() {
         jdbcTemplate.update("insert into provinces (name) values ('Tỉnh cũ')");
         Long provinceId = jdbcTemplate.queryForObject("select max(id) from provinces", Long.class);
@@ -153,6 +173,20 @@ class MySqlMigrationIntegrationTest {
                 where table_schema = database() and table_name = ? and column_name = ?
                 """, String.class, tableName, columnName);
         return "YES".equals(nullable);
+    }
+
+    private String columnType(String tableName, String columnName) {
+        return jdbcTemplate.queryForObject("""
+                select column_type from information_schema.columns
+                where table_schema = database() and table_name = ? and column_name = ?
+                """, String.class, tableName, columnName);
+    }
+
+    private Long columnCharacterMaximumLength(String tableName, String columnName) {
+        return jdbcTemplate.queryForObject("""
+                select character_maximum_length from information_schema.columns
+                where table_schema = database() and table_name = ? and column_name = ?
+                """, Long.class, tableName, columnName);
     }
 
     private boolean constraintExists(String constraintName) {

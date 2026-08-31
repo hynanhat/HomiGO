@@ -42,14 +42,28 @@ public class AdminController {
     }
 
     @PostMapping("/listings/{id}/approve")
-    public ResponseEntity<ApiResponse<AdminListingRes>> approve(@PathVariable Long id, Authentication auth) {
-        return ResponseEntity.ok(ApiResponse.success(adminService.approveListing(id, auth.getName())));
+    public ResponseEntity<ApiResponse<AdminListingRes>> approve(
+            @PathVariable Long id, @Valid @RequestBody ApproveListingReq request, Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success(
+                adminService.approveListing(id, auth.getName(), request)));
     }
 
     @PostMapping("/listings/{id}/reject")
     public ResponseEntity<ApiResponse<AdminListingRes>> reject(
             @PathVariable Long id, @Valid @RequestBody RejectListingReq request, Authentication auth) {
         return ResponseEntity.ok(ApiResponse.success(adminService.rejectListing(id, auth.getName(), request)));
+    }
+
+    @GetMapping("/listings/{id}")
+    public ResponseEntity<ApiResponse<AdminListingDetailRes>> listing(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(adminService.getListing(id)));
+    }
+
+    @PostMapping("/listings/{id}/remove")
+    public ResponseEntity<ApiResponse<AdminListingRes>> remove(
+            @PathVariable Long id, @Valid @RequestBody RemoveListingReq request, Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success(
+                adminService.removeListing(id, auth.getName(), request)));
     }
 
     @GetMapping("/listings/{id}/statistics")

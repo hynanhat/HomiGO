@@ -49,6 +49,7 @@ class ListingServiceTest {
                 eventPublisher, notificationService, locationService);
         owner = user(1L, "owner@example.com");
         category = new Category(); category.setId(2L); category.setName("Nhà");
+        category.setTransactionType(TransactionType.BUY);
         province = new AdministrativeProvince(); province.setId(3L); province.setOfficialCode("79");
         province.setOfficialName("Thành phố Hồ Chí Minh");
         commune = new CommuneUnit(); commune.setId(4L); commune.setOfficialCode("26734");
@@ -70,7 +71,7 @@ class ListingServiceTest {
     @Test
     void anotherSellerCannotUpdateOrDeleteOrSubmit() {
         Listing listing = listing(ListingStatus.DRAFT);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
 
         assertThrows(ForbiddenException.class, () -> service.updateListing(10L, "other@example.com", request(0L)));
         assertThrows(ForbiddenException.class, () -> service.deleteListing(10L, "other@example.com"));
@@ -80,7 +81,7 @@ class ListingServiceTest {
     @Test
     void submitMovesDraftToPendingAndWritesHistory() {
         Listing listing = listing(ListingStatus.DRAFT);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         when(listingRepository.saveAndFlush(listing)).thenReturn(listing);
 
         service.submitListing(10L, owner.getEmail());
@@ -94,7 +95,7 @@ class ListingServiceTest {
     void staleVersionIsRejected() {
         Listing listing = listing(ListingStatus.DRAFT);
         listing.setVersion(3L);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
 
         assertThrows(ConflictException.class,
                 () -> service.updateListing(10L, owner.getEmail(), request(2L)));
@@ -103,7 +104,7 @@ class ListingServiceTest {
     @Test
     void editingActiveListingMovesItBackToPending() {
         Listing listing = listing(ListingStatus.ACTIVE);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         stubReferences();
         when(listingRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -118,7 +119,7 @@ class ListingServiceTest {
     void editingExpiredListingCreatesANewDraft() {
         Listing listing = listing(ListingStatus.EXPIRED);
         listing.setExpiresAt(LocalDateTime.now().minusDays(1));
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         stubReferences();
         when(listingRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -133,7 +134,7 @@ class ListingServiceTest {
     @Test
     void inactiveListingCanBeSubmittedAgain() {
         Listing listing = listing(ListingStatus.INACTIVE);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         when(listingRepository.saveAndFlush(listing)).thenReturn(listing);
 
         service.submitListing(10L, owner.getEmail());
@@ -145,7 +146,7 @@ class ListingServiceTest {
     void activeAndPendingListingsCannotBeDeleted() {
         Listing active = listing(ListingStatus.ACTIVE);
         Listing pending = listing(ListingStatus.PENDING);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(active), Optional.of(pending));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(active), Optional.of(pending));
 
         assertThrows(BadRequestException.class,
                 () -> service.deleteListing(10L, owner.getEmail()));
@@ -160,7 +161,7 @@ class ListingServiceTest {
         ListingImage first = new ListingImage(); first.setStorageKey("first.jpg");
         ListingImage second = new ListingImage(); second.setStorageKey("second.webp");
         listing.setImages(List.of(first, second));
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
 
         service.deleteListing(10L, owner.getEmail());
 
@@ -181,7 +182,7 @@ class ListingServiceTest {
         anotherCommune.setAdministrativeProvince(anotherProvince);
         Project project = new Project(); project.setId(20L); project.setAdministrativeProvince(anotherProvince);
         project.setCommuneUnit(anotherCommune);
-        when(listingRepository.findById(10L)).thenReturn(Optional.of(listing));
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(listing));
         stubReferences();
         when(projectRepository.findById(20L)).thenReturn(Optional.of(project));
 
@@ -190,6 +191,29 @@ class ListingServiceTest {
 
         assertEquals("Dự án không thuộc địa chỉ đã chọn.", error.getMessage());
         verify(listingRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void removedListingCanBeEditedResubmittedOrDeletedByItsOwner() {
+        Listing toEdit = removedListing();
+        Listing toSubmit = removedListing();
+        Listing toDelete = removedListing();
+        when(listingRepository.findByIdForUpdate(10L)).thenReturn(
+                Optional.of(toEdit), Optional.of(toSubmit), Optional.of(toDelete));
+        when(listingRepository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        stubReferences();
+
+        service.updateListing(10L, owner.getEmail(), request(0L));
+        service.submitListing(10L, owner.getEmail());
+        service.deleteListing(10L, owner.getEmail());
+
+        assertEquals(ListingStatus.DRAFT, toEdit.getStatus());
+        assertNull(toEdit.getRemovalReason());
+        assertNull(toEdit.getRemovedAt());
+        assertNull(toEdit.getRemovedBy());
+        assertEquals(ListingStatus.PENDING, toSubmit.getStatus());
+        assertNull(toSubmit.getRemovalReason());
+        verify(listingRepository).delete(toDelete);
     }
 
     @Test
@@ -228,6 +252,14 @@ class ListingServiceTest {
         listing.setTitle("Tin cũ"); listing.setDescription("Mô tả cũ");
         listing.setPrice(BigDecimal.TEN); listing.setArea(10.0); listing.setAddress("Địa chỉ");
         listing.setContactName("An"); listing.setContactPhone("0901234567"); listing.setStatus(status); listing.setVersion(0L);
+        return listing;
+    }
+
+    private Listing removedListing() {
+        Listing listing = listing(ListingStatus.REMOVED);
+        listing.setRemovalReason("Nội dung không còn phù hợp");
+        listing.setRemovedAt(LocalDateTime.now());
+        listing.setRemovedBy(owner);
         return listing;
     }
 

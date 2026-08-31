@@ -62,9 +62,12 @@ public class Listing {
     @Column(name = "legal_status") private String legalStatus;
     @Column(name = "contact_name", nullable = false) private String contactName;
     @Column(name = "contact_phone", nullable = false) private String contactPhone;
-    @Column(name = "rejection_reason") private String rejectionReason;
+    @Column(name = "rejection_reason", length = 1000) private String rejectionReason;
+    @Column(name = "removal_reason", length = 500) private String removalReason;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "approved_by") private User approvedBy;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "removed_by") private User removedBy;
     @Column(name = "approved_at") private LocalDateTime approvedAt;
+    @Column(name = "removed_at") private LocalDateTime removedAt;
     @Column(name = "published_at") private LocalDateTime publishedAt;
 
     @Enumerated(EnumType.STRING)
@@ -135,10 +138,16 @@ public class Listing {
     public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
     public String getRejectionReason() { return rejectionReason; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    public String getRemovalReason() { return removalReason; }
+    public void setRemovalReason(String removalReason) { this.removalReason = removalReason; }
     public User getApprovedBy() { return approvedBy; }
     public void setApprovedBy(User approvedBy) { this.approvedBy = approvedBy; }
+    public User getRemovedBy() { return removedBy; }
+    public void setRemovedBy(User removedBy) { this.removedBy = removedBy; }
     public LocalDateTime getApprovedAt() { return approvedAt; }
     public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+    public LocalDateTime getRemovedAt() { return removedAt; }
+    public void setRemovedAt(LocalDateTime removedAt) { this.removedAt = removedAt; }
     public LocalDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(LocalDateTime publishedAt) { this.publishedAt = publishedAt; }
     public ListingStatus getStatus() { return status; }

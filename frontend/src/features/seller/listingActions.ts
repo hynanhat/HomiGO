@@ -8,9 +8,10 @@ const actions: Record<ListingStatus, ListingLifecycleAction[]> = {
   REJECTED: ['edit', 'submit', 'delete'],
   INACTIVE: ['edit', 'submit', 'delete'],
   EXPIRED: ['edit', 'delete'],
+  REMOVED: ['edit', 'submit', 'delete'],
 }
 export const actionsForStatus = (status: ListingStatus) => actions[status]
 export const canRunListingAction = (status: ListingStatus, action: ListingLifecycleAction) =>
   actions[status].includes(action)
 export const canManageListingImages = (status: ListingStatus) =>
-  ['DRAFT', 'REJECTED', 'INACTIVE'].includes(status)
+  ['DRAFT', 'REJECTED', 'INACTIVE', 'REMOVED'].includes(status)
