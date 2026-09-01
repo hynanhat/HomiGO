@@ -29,3 +29,7 @@ test-results/
 .DS_Store
 Thumbs.db
 uploads/
+
+# Local AI / specification tooling
+.agents/
+.specify/

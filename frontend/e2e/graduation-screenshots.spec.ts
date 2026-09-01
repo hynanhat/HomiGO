@@ -90,7 +90,7 @@ test('capture approved graduation homepage', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { name: 'Tìm đúng nơi. Sống đúng chất.' })).toBeVisible()
   await expect(page.getByText('Căn hộ hai phòng ngủ tại An Khánh')).toBeVisible()
   await page.screenshot({
-    path: `../.specify/specs/002-modern-business-frontend/evidence/screenshots/home-${testInfo.project.name}.png`,
+    path: `test-results/graduation-screenshots/home-${testInfo.project.name}.png`,
     fullPage: true,
   })
 })
